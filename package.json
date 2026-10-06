@@ -1,0 +1,79 @@
+{
+  "name": "wbw-kawaii",
+  "displayName": "wbw kawaii C/C++ 报错",
+  "description": "把 ms-vscode.cpptools 的报错文案就地改写成可爱风格：正则/直接 replace，不替换整个 message.json，全版本有效",
+  "version": "0.1.0",
+  "publisher": "wbw121124",
+  "license": "MPL-2.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/wbw121124/wbw-kawaii"
+  },
+  "engines": {
+    "vscode": "^1.75.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "keywords": [
+    "cpptools",
+    "kawaii",
+    "cute",
+    "C++",
+    "error"
+  ],
+  "activationEvents": [
+    "onStartupFinished"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "wbw-kawaii.patch",
+        "title": "Kawaii: 重新改写 cpptools 报错文案"
+      },
+      {
+        "command": "wbw-kawaii.restore",
+        "title": "Kawaii: 还原 cpptools 原始报错文案"
+      },
+      {
+        "command": "wbw-kawaii.status",
+        "title": "Kawaii: 查看改写状态与覆盖率"
+      }
+    ],
+    "configuration": {
+      "title": "wbw kawaii",
+      "properties": {
+        "wbw-kawaii.enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "启用自动改写（启动及 cpptools 版本变化时对 messages.json 就地改写）"
+        },
+        "wbw-kawaii.fallbackDecorate": {
+          "type": "boolean",
+          "default": true,
+          "description": "对规则表未命中的文案用正则追加统一可爱后缀（命中规则表的条目不受影响）"
+        },
+        "wbw-kawaii.promptReload": {
+          "type": "boolean",
+          "default": true,
+          "description": "改写/还原后弹出通知，提示重载窗口使新文案生效"
+        }
+      }
+    }
+  },
+  "scripts": {
+    "fetch-baseline": "node scripts/fetch-baseline.mjs",
+    "build:rules": "node scripts/build-rules.mjs",
+    "compile": "tsc -p ./",
+    "watch": "tsc -w -p ./",
+    "test": "tsc -p ./ && node --test test/transform.test.cjs",
+    "package": "vsce package"
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.0",
+    "@types/vscode": "^1.75.0",
+    "@vscode/vsce": "^3.2.0",
+    "typescript": "^5.6.0"
+  }
+}

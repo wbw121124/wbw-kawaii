@@ -1,0 +1,46 @@
+name: build
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Cache cpptools baseline (vsix 提取产物)
+        uses: actions/cache@v4
+        with:
+          path: assets/baseline
+          key: cpptools-baseline-1.34.4-1.19.7-1.35.3
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Fetch baselines
+        run: npm run fetch-baseline
+
+      - name: Build rules
+        run: npm run build:rules
+
+      - name: Check generated rules in sync
+        run: git diff --exit-code src/rules.generated.ts
+
+      - name: Test
+        run: npm test
+
+      - name: Package
+        run: npm run package
+
+      - name: Upload VSIX
+        uses: actions/upload-artifact@v4
+        with:
+          name: wbw-kawaii-vsix
+          path: "*.vsix"

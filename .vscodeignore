@@ -1,0 +1,9 @@
+.vscode/**
+.gitignore
+.github/**
+assets/baseline/**
+scripts/**
+test/**
+src/**
+tsconfig.json
+**/*.map
