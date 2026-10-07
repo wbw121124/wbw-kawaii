@@ -69,8 +69,12 @@ export class KawaiiPatcher {
       decorateFallback: cfg.get<boolean>('fallbackDecorate', true)
     };
 
-    // ===== 现有 cpptools 流程（保持不变）=====
-    await this.runCpptools(reason, opts);
+    // ===== 现有 cpptools 流程（locale 门控：非 zh-cn 时还原）=====
+    if (!isZhCn) {
+      await this.restoreCpptoolsSilent();
+    } else {
+      await this.runCpptools(reason, opts);
+    }
 
     // ===== 新目标流程 =====
     if (!isZhCn) {
@@ -354,8 +358,35 @@ export class KawaiiPatcher {
     }
     if (restoredCount > 0 && reason !== 'manual') {
       void vscode.window.showInformationMessage(
-        `wbw kawaii：界面语言不是简体中文（${vscode.env.language}），已还原 TS/CSS/HTML 的可爱补丁（显示英文原文）。切回简体中文后会自动重新生效。`
+        `wbw kawaii：界面语言不是简体中文（${vscode.env.language}），已还原 cpptools / TS / CSS / HTML 的可爱补丁（显示英文原文）。切回简体中文后会自动重新生效。`
       );
+    }
+  }
+
+  // ===== 静默还原 cpptools（非 zh-cn 门控用，不弹通知）=====
+  private async restoreCpptoolsSilent(): Promise<void> {
+    const located = this.locateCpptools();
+    if (!located) return;
+    const { dir, file } = located;
+    const backupPath = path.join(dir, 'messages.json.orig');
+    const metaPath = path.join(dir, 'messages.json.wbw-kawaii.json');
+    const meta = readTargetMeta(metaPath);
+    if (!meta || meta.state !== 'patched') return;
+    if (!fs.existsSync(backupPath)) {
+      this.log('[cpptools] 缺少备份，跳过还原');
+      return;
+    }
+    try {
+      const backup = fs.readFileSync(backupPath, 'utf8');
+      if (sha256(backup) === meta.originalHash) {
+        fs.writeFileSync(file, backup, 'utf8');
+        writeTargetMeta(metaPath, { ...meta, state: 'inactive', updatedAt: new Date().toISOString() });
+        this.log('[cpptools] 已还原为原文（locale 非 zh-cn）');
+      } else {
+        this.log('[cpptools] 备份哈希不一致，跳过还原');
+      }
+    } catch (e) {
+      this.log(`[cpptools] 还原失败: ${String(e)}`);
     }
   }
 
