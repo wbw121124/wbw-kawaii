@@ -3,20 +3,10 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as crypto from 'crypto';
 import { patchContent, formatStats, RULES_VERSION, PatchOptions } from './transform';
-
-const EXT_ID = 'ms-vscode.cpptools';
-const BACKUP_NAME = 'messages.json.orig';
-const META_NAME = 'messages.json.wbw-kawaii.json';
-
-interface Meta {
-  state: 'patched' | 'restored';
-  rulesVersion: string;
-  cpptoolsVersion: string;
-  locale: string;
-  originalHash: string;
-  patchedHash: string;
-  updatedAt: string;
-}
+import {
+  buildTargets, TargetDef, TargetMeta, readTargetMeta, writeTargetMeta,
+  shouldPatchTarget
+} from './targets';
 
 export type RunReason = 'startup' | 'extensions-changed' | 'config-enabled' | 'manual';
 
@@ -24,19 +14,122 @@ function sha256(data: string | Buffer): string {
   return crypto.createHash('sha256').update(data).digest('hex');
 }
 
-function readMeta(metaPath: string): Meta | null {
-  try {
-    if (!fs.existsSync(metaPath)) return null;
-    const v = JSON.parse(fs.readFileSync(metaPath, 'utf8'));
-    if (v && typeof v === 'object' && typeof v.patchedHash === 'string') return v as Meta;
-    return null;
-  } catch {
-    return null;
-  }
+// TS diag 表补丁：正则匹配 diag(key, category, "messageKey", "English text") 行，
+// 将 English text 替换为可爱变体。保留原有注释和换行。
+function patchTsDiag(content: string, rules: Record<string, string[]>): { content: string; stats: { hits: number; decorated: number }; changed: boolean } {
+  // 模式：PropertyName: diag(2304, 1 /* Error */, "messageKey", "English text"),
+  // messageKey 与 PropertyName 可能不同，以 messageKey（3rd arg）为准查规则
+  const re = /([A-Za-z_$][\w$]*)\s*:\s*diag\(\s*\d+\s*,\s*[^,]+?,\s*"((?:[^"\\]|\\.)*)"\s*,\s*"((?:[^"\\]|\\.)*)"\s*\)/g;
+  let hits = 0, decorated = 0;
+  let result = content.replace(re, (match, propName, msgKey, enText) => {
+    const variants = rules[msgKey];
+    if (variants && variants.length > 0) {
+      // 轮换：基于 msgKey hash 选变体
+      const h = crypto.createHash('sha256').update(msgKey).digest();
+      const idx = (h.readUInt32BE(0) + 0) % variants.length;
+      const cute = variants[idx];
+      // 转义 JSON-like 字符串（反斜杠、引号）
+      const escaped = cute.replace(/\\/g, '\\\\').replace(/"/g, '\\"');
+      hits++;
+      // 提取原始 diag 调用的各段
+      const diagMatch = match.match(/^(\w+)\s*:\s*diag\(([\s\S]*?)$/);
+      const prefix = diagMatch ? diagMatch[1] : propName;
+      const argsPart = diagMatch ? diagMatch[2] : '';
+      return `${prefix}: diag(${argsPart}"${msgKey}","${escaped}")}`;
+    }
+    return match;
+  });
+  // 兜底：未命中的英文文本加后缀
+  result = result.replace(/"((?:[^"\\]|\\.)*[^"\\])"\s*\)/g, (m, text) => {
+    if (!text.includes('喵~') && text.length > 3) {
+      decorated++;
+      return `"${text} 喵~")`;
+    }
+    return m;
+  });
+  return { content: result, stats: { hits, decorated }, changed: result !== content };
 }
 
-function writeMeta(metaPath: string, meta: Meta): void {
-  fs.writeFileSync(metaPath, JSON.stringify(meta, null, 2) + '\n', 'utf8');
+// zh JSON 补丁（jsonObject）：逐行替换 value
+function patchJsonObject(content: string, rules: Record<string, string[]>): { content: string; stats: { hits: number; decorated: number }; changed: boolean } {
+  const lines = content.split(/(\r\n|\n|\r)/);
+  let hits = 0, decorated = 0;
+  let changed = false;
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    if (i % 2 === 1) continue; // EOL
+    const m = line.match(/^\s*"((?:[^"\\]|\\.)*)"\s*:\s*"((?:[^"\\]|\\.)*)"\s*,?\s*$/);
+    if (!m) continue;
+    const key = m[1];
+    const val = m[2];
+    const variants = rules[key];
+    if (variants && variants.length > 0) {
+      const h = crypto.createHash('sha256').update(key).digest();
+      const idx = (h.readUInt32BE(0)) % variants.length;
+      const cute = variants[idx];
+      if (cute !== val) {
+        lines[i] = line.replace(/"(?:"[^"]*")*"/, `"${cute}"`);
+        hits++;
+        changed = true;
+      }
+    } else if (val.trim() && !val.endsWith(' 喵~')) {
+      // 兜底后缀
+      lines[i] = line.replace(/"((?:[^"\\]|\\.)*)"\s*$/, '"$1 喵~"');
+      decorated++;
+      changed = true;
+    }
+  }
+  return { content: lines.join(''), stats: { hits, decorated }, changed };
+}
+
+// packBundle 补丁（语言包 contents.bundle）：JSON.parse → transform values → stringify compact
+function patchPackBundle(content: string, rules: Record<string, string[]>): { content: string; stats: { hits: number; decorated: number }; changed: boolean } {
+  let obj: any;
+  try { obj = JSON.parse(content); } catch {
+    // 回退：行级正则
+    return patchJsonObject(content, rules);
+  }
+  const bundle = obj?.contents?.bundle;
+  if (!bundle || typeof bundle !== 'object') return { content, stats: { hits: 0, decorated: 0 }, changed: false };
+  let hits = 0, decorated = 0;
+  let changed = false;
+  for (const [key, val] of Object.entries(bundle)) {
+    if (typeof val !== 'string') continue;
+    const variants = rules[key];
+    if (variants && variants.length > 0) {
+      const h = crypto.createHash('sha256').update(key).digest();
+      const idx = (h.readUInt32BE(0)) % variants.length;
+      const cute = variants[idx];
+      if (cute !== val) {
+        bundle[key] = cute;
+        hits++;
+        changed = true;
+      }
+    } else if (val.trim() && !val.endsWith(' 喵~') && !val.endsWith('…') && !val.endsWith('~')) {
+      bundle[key] = val + ' 喵~';
+      decorated++;
+      changed = true;
+    }
+  }
+  if (!changed) return { content, stats: { hits: 0, decorated: 0 }, changed: false };
+  // 紧凑序列化（保留原始格式风格：单行）
+  const compact = JSON.stringify(obj);
+  if (compact === content) return { content, stats: { hits, decorated }, changed: false };
+  return { content: compact, stats: { hits, decorated }, changed: true };
+}
+
+// bundleTemplate 补丁：在 bundle 中找到并替换模板字面量
+function patchBundleTemplate(content: string, suffix: string): { content: string; stats: { hits: number; decorated: number }; changed: boolean } {
+  // 匹配 `Unknown at rule @${...}` 这类无 key 的模板诊断
+  const re = /`([^`]*?)\$\{[^}]+\}([^`]*)`/g;
+  let hits = 0;
+  const result = content.replace(re, (match, prefix, suffix_part) => {
+    const full = prefix + suffix_part;
+    if (full.includes('喵~')) return match; // 已打过
+    hits++;
+    return `\`${prefix}${suffix_part} ${suffix.trim()}\``;
+  });
+  return { content: result, stats: { hits, decorated: 0 }, changed: result !== content };
 }
 
 export class KawaiiPatcher {
@@ -70,16 +163,6 @@ export class KawaiiPatcher {
     }
   }
 
-  private locate(): { ext: vscode.Extension<unknown>; dir: string; file: string; version: string } | null {
-    const ext = vscode.extensions.getExtension(EXT_ID);
-    if (!ext) return null;
-    const locale = (vscode.env.language || '').toLowerCase();
-    const dir = path.join(ext.extensionPath, 'bin', 'messages', locale);
-    const file = path.join(dir, 'messages.json');
-    const version = String((ext.packageJSON as { version?: string }).version ?? 'unknown');
-    return { ext, dir, file, version };
-  }
-
   private async doRun(reason: RunReason): Promise<void> {
     const cfg = vscode.workspace.getConfiguration('wbw-kawaii');
     const enabled = cfg.get<boolean>('enabled', true);
@@ -89,7 +172,162 @@ export class KawaiiPatcher {
       return;
     }
 
-    const located = this.locate();
+    const locale = (vscode.env.language ?? '').toLowerCase();
+    const isZhCn = locale === 'zh-cn';
+
+    // 远端守卫
+    if (vscode.env.remoteName && reason !== 'manual') {
+      this.log(`远程环境（${vscode.env.remoteName}）跳过自动补丁`);
+      return;
+    }
+
+    const opts: PatchOptions = {
+      decorateFallback: cfg.get<boolean>('fallbackDecorate', true)
+    };
+
+    // ===== 现有 cpptools 流程（保持不变）=====
+    await this.runCpptools(reason, opts);
+
+    // ===== 新目标流程 =====
+    if (!isZhCn) {
+      // 非 zh-cn：还原所有新目标
+      await this.restoreNewTargets(reason);
+      return;
+    }
+
+    // zh-cn：补丁新目标
+    const targets = buildTargets();
+    let totalRestored = 0;
+    let totalNotified = false;
+
+    for (const t of targets) {
+      if (t.id === 'cpptools') continue; // 已处理
+      const fileHash = fs.existsSync(t.file) ? sha256(fs.readFileSync(t.file, 'utf8')) : null;
+      const meta = readTargetMeta(t.metaFile);
+      const backupExists = fs.existsSync(t.backupFile);
+
+      // 版本/规则匹配检查
+      const versionOk = !meta || meta.sourceVersion === (t.versionProvider?.() ?? 'unknown');
+      const rulesOk = !meta || meta.rulesVersion === RULES_VERSION;
+      const hashOk = !meta || meta.patchedHash === fileHash;
+
+      if (meta && meta.state === 'restored' && auto) {
+        this.log(`[${t.id}] 用户已手动还原，自动改写暂停`);
+        continue;
+      }
+      if (meta && versionOk && rulesOk && hashOk && meta.state === 'patched') {
+        this.log(`[${t.id}] 已是改写状态（${t.versionProvider?.() ?? '?'}），跳过`);
+        continue;
+      }
+
+      // 行数门禁
+      if (t.minLines && backupExists) {
+        const backupLines = fs.readFileSync(t.backupFile, 'utf8').split('\n').length;
+        if (backupLines < t.minLines) {
+          this.log(`[${t.id}] 行数 ${backupLines} < 门禁 ${t.minLines}，中止补丁（源文件可能变化）`);
+          continue;
+        }
+      }
+
+      let input = fs.readFileSync(t.file, 'utf8');
+      let inputHash = fileHash ?? '';
+
+      // 规则版本变化 → 从备份取回原文
+      if (meta && meta.state === 'patched' && meta.rulesVersion !== RULES_VERSION) {
+        if (backupExists) {
+          const backup = fs.readFileSync(t.backupFile, 'utf8');
+          if (sha256(backup) === meta.originalHash) {
+            input = backup;
+            inputHash = meta.originalHash;
+            this.log(`[${t.id}] 规则版本变化（${meta.rulesVersion} → ${RULES_VERSION}），从备份取回原文`);
+          } else {
+            this.log(`[${t.id}] 警告: 备份哈希不一致，按当前文件继续`);
+          }
+        } else {
+          this.log(`[${t.id}] 警告: 缺少备份，按当前文件继续`);
+        }
+      }
+
+      // 按目标类型打补丁
+      let res: { content: string; stats: { hits: number; decorated: number }; changed: boolean };
+      switch (t.kind) {
+        case 'tsDiagTable':
+          res = patchTsDiag(input, require('./rules.generated').TS_RULES);
+          break;
+        case 'jsonObject':
+          res = patchJsonObject(input, require('./rules.generated').TS_RULES);
+          break;
+        case 'packBundle':
+          res = patchPackBundle(input, require('./rules.generated').PACK_RULES);
+          break;
+        case 'bundleTemplate':
+          res = patchBundleTemplate(input, ' 喵~');
+          break;
+        default:
+          this.log(`[${t.id}] 未知目标类型 ${t.kind}`);
+          continue;
+      }
+
+      if (!res.changed) {
+        writeTargetMeta(t.metaFile, {
+          state: 'patched',
+          rulesVersion: RULES_VERSION,
+          sourceVersion: t.versionProvider?.() ?? 'unknown',
+          locale,
+          originalHash: meta?.originalHash ?? inputHash,
+          patchedHash: inputHash,
+          updatedAt: new Date().toISOString()
+        });
+        this.log(`[${t.id}] 无需改写（文件未变化）。命中 ${res.stats.hits}，兜底 ${res.stats.decorated}`);
+        continue;
+      }
+
+      fs.writeFileSync(t.backupFile, input, 'utf8');
+      fs.writeFileSync(t.file, res.content, 'utf8');
+      writeTargetMeta(t.metaFile, {
+        state: 'patched',
+        rulesVersion: RULES_VERSION,
+        sourceVersion: t.versionProvider?.() ?? 'unknown',
+        locale,
+        originalHash: inputHash,
+        patchedHash: sha256(res.content),
+        updatedAt: new Date().toISOString()
+      });
+      this.log(`[${t.id}] 改写完成。命中 ${res.stats.hits}，兜底 ${res.stats.decorated}`);
+      totalRestored = 0; // 不打扰计数
+    }
+
+    // 弹出重载提示
+    if (cfg.get<boolean>('promptReload', true) && reason !== 'manual') {
+      const choice = await vscode.window.showInformationMessage(
+        'wbw kawaii: 已改写 TypeScript / CSS / HTML 报错文案，重载窗口后生效。',
+        '重载窗口'
+      );
+      if (choice === '重载窗口') {
+        await vscode.commands.executeCommand('workbench.action.reloadWindow');
+      }
+    }
+  }
+
+  // ===== cpptools 原有逻辑（保持不变）=====
+  private locateCpptools(): { dir: string; file: string; version: string } | null {
+    const ext = vscode.extensions.getExtension('ms-vscode.cpptools');
+    if (!ext) return null;
+    const locale = (vscode.env.language || '').toLowerCase();
+    const dir = path.join(ext.extensionPath, 'bin', 'messages', locale);
+    const file = path.join(dir, 'messages.json');
+    const version = String((ext.packageJSON as { version?: string }).version ?? 'unknown');
+    return { dir, file, version };
+  }
+
+  private async runCpptools(reason: RunReason, opts: PatchOptions): Promise<void> {
+    const cfg = vscode.workspace.getConfiguration('wbw-kawaii');
+    const auto = reason === 'startup' || reason === 'extensions-changed';
+    if (auto && !cfg.get<boolean>('enabled', true)) {
+      this.log('wbw-kawaii.enabled=false，跳过 cpptools');
+      return;
+    }
+    const located = this.locateCpptools();
     if (!located) {
       this.log('未检测到 ms-vscode.cpptools 扩展');
       if (reason === 'manual') {
@@ -97,7 +335,6 @@ export class KawaiiPatcher {
       }
       return;
     }
-
     const { dir, file, version } = located;
     if (!fs.existsSync(file)) {
       const locale = vscode.env.language;
@@ -114,36 +351,29 @@ export class KawaiiPatcher {
       }
       return;
     }
-
     const content = fs.readFileSync(file, 'utf8');
     const hash = sha256(content);
-    const metaPath = path.join(dir, META_NAME);
-    const backupPath = path.join(dir, BACKUP_NAME);
-    const meta = readMeta(metaPath);
+    const metaPath = path.join(dir, 'messages.json.wbw-kawaii.json');
+    const backupPath = path.join(dir, 'messages.json.orig');
+    const meta = readTargetMeta(metaPath);
 
     if (meta && meta.state === 'restored' && auto) {
-      this.log('检测到用户已手动还原（state=restored），自动改写暂停；可用命令“Kawaii: 重新改写”恢复');
+      this.log('检测到用户已手动还原（state=restored），自动改写暂停；可用命令"Kawaii: 重新改写"恢复');
       return;
     }
-    if (meta && meta.rulesVersion === RULES_VERSION && meta.patchedHash === hash && meta.cpptoolsVersion === version) {
+    if (meta && meta.rulesVersion === RULES_VERSION && meta.patchedHash === hash && meta.sourceVersion === version) {
       this.log(`已是改写状态（cpptools ${version}, ${RULES_VERSION}），跳过`);
       return;
     }
 
-    const opts: PatchOptions = {
-      decorateFallback: cfg.get<boolean>('fallbackDecorate', true)
-    };
-
-    // 规则版本已变化：当前文件是旧规则的改写产物，直接改会被幂等保护挡住（新规则落不了地）。
-    // 备份校验通过时先取回原始文本再改写，保证修复对已改写过的用户生效。
     let input = content;
     let inputHash = hash;
     if (meta && meta.state === 'patched' && meta.rulesVersion !== RULES_VERSION) {
       if (fs.existsSync(backupPath)) {
         const backup = fs.readFileSync(backupPath, 'utf8');
-        if (sha256(backup) === meta.originalHash) {
+        if (sha256(backup) === (meta as any).originalHash) {
           input = backup;
-          inputHash = meta.originalHash;
+          inputHash = (meta as any).originalHash;
           this.log(`规则版本变化（${meta.rulesVersion} → ${RULES_VERSION}），从备份取回原文后重新改写`);
         } else {
           this.log('警告: 备份与记录的原始哈希不一致，无法回退旧改写，按当前文件继续');
@@ -154,72 +384,92 @@ export class KawaiiPatcher {
     }
 
     const res = patchContent(input, opts);
-
     if (!res.changed) {
-      // 两种情形：文件已是改写产物（meta 丢失/规则版本变化）或规则零命中
-      writeMeta(metaPath, {
+      writeTargetMeta(metaPath, {
         state: 'patched',
         rulesVersion: RULES_VERSION,
-        cpptoolsVersion: version,
+        sourceVersion: version,
         locale: vscode.env.language,
-        originalHash: meta ? meta.originalHash : inputHash,
+        originalHash: meta ? (meta as any).originalHash : inputHash,
         patchedHash: inputHash,
         updatedAt: new Date().toISOString()
-      });
+      } as any);
       this.log(`无需改写（文件未变化）。${formatStats(res.stats)}`);
       return;
     }
-
-    // 此刻 input 是未被本次改写的输入：覆盖备份为“最近一次原始文件”
     fs.writeFileSync(backupPath, input, 'utf8');
     fs.writeFileSync(file, res.content, 'utf8');
-    writeMeta(metaPath, {
+    writeTargetMeta(metaPath, {
       state: 'patched',
       rulesVersion: RULES_VERSION,
-      cpptoolsVersion: version,
+      sourceVersion: version,
       locale: vscode.env.language,
       originalHash: inputHash,
       patchedHash: sha256(res.content),
       updatedAt: new Date().toISOString()
-    });
+    } as any);
     this.log(`改写完成（cpptools ${version}）。${formatStats(res.stats)}`);
+  }
 
-    if (cfg.get<boolean>('promptReload', true)) {
-      const choice = await vscode.window.showInformationMessage(
-        `wbw kawaii: 已改写 cpptools 报错文案（命中 ${res.stats.hits}，兜底 ${res.stats.decorated}），重载窗口后生效。`,
-        '重载窗口'
-      );
-      if (choice === '重载窗口') {
-        await vscode.commands.executeCommand('workbench.action.reloadWindow');
+  // ===== 非 zh-cn 时还原所有新目标 =====
+  private async restoreNewTargets(reason: RunReason): Promise<void> {
+    const targets = buildTargets();
+    let restoredCount = 0;
+    for (const t of targets) {
+      if (t.id === 'cpptools') continue;
+      const meta = readTargetMeta(t.metaFile);
+      if (!meta || meta.state !== 'patched') continue;
+      if (!fs.existsSync(t.backupFile)) {
+        this.log(`[${t.id}] 缺少备份，跳过还原`);
+        continue;
       }
+      try {
+        const backup = fs.readFileSync(t.backupFile, 'utf8');
+        if (sha256(backup) === meta.originalHash) {
+          fs.writeFileSync(t.file, backup, 'utf8');
+          writeTargetMeta(t.metaFile, { ...meta, state: 'inactive', updatedAt: new Date().toISOString() });
+          restoredCount++;
+          this.log(`[${t.id}] 已还原为原文（locale=${vscode.env.language}）`);
+        } else {
+          this.log(`[${t.id}] 备份哈希不一致，跳过还原`);
+        }
+      } catch (e) {
+        this.log(`[${t.id}] 还原失败: ${String(e)}`);
+      }
+    }
+    if (restoredCount > 0 && reason !== 'manual') {
+      void vscode.window.showInformationMessage(
+        `wbw kawaii：界面语言不是简体中文（${vscode.env.language}），已还原 TS/CSS/HTML 的可爱补丁（显示英文原文）。切回简体中文后会自动重新生效。`
+      );
     }
   }
 
   async restore(): Promise<void> {
-    const located = this.locate();
+    // cpptools 还原（原有逻辑）
+    const located = this.locateCpptools();
     if (!located) {
       void vscode.window.showInformationMessage('wbw kawaii: 未检测到 cpptools 扩展');
       return;
     }
     const { dir, file } = located;
-    const backupPath = path.join(dir, BACKUP_NAME);
-    const metaPath = path.join(dir, META_NAME);
+    const backupPath = path.join(dir, 'messages.json.orig');
+    const metaPath = path.join(dir, 'messages.json.wbw-kawaii.json');
     if (!fs.existsSync(backupPath)) {
       void vscode.window.showInformationMessage('wbw kawaii: 没有找到备份（messages.json.orig），无法还原');
       return;
     }
     const original = fs.readFileSync(backupPath, 'utf8');
     fs.writeFileSync(file, original, 'utf8');
-    const meta = readMeta(metaPath);
-    writeMeta(metaPath, {
+    const meta = readTargetMeta(metaPath);
+    writeTargetMeta(metaPath, {
       state: 'restored',
       rulesVersion: meta?.rulesVersion ?? RULES_VERSION,
-      cpptoolsVersion: meta?.cpptoolsVersion ?? 'unknown',
+      sourceVersion: meta?.sourceVersion ?? 'unknown',
       locale: meta?.locale ?? vscode.env.language,
       originalHash: sha256(original),
       patchedHash: sha256(original),
       updatedAt: new Date().toISOString()
-    });
+    } as any);
     this.log('已从备份还原 cpptools 消息文件（state=restored，自动改写暂停）');
     const choice = await vscode.window.showInformationMessage(
       'wbw kawaii: 已还原原始报错文案，重载窗口后生效。若不希望下次启动再次改写，请保持 wbw-kawaii.enabled 关闭（当前已记录还原状态）。',
@@ -231,31 +481,61 @@ export class KawaiiPatcher {
   }
 
   async status(): Promise<void> {
-    const located = this.locate();
-    if (!located) {
-      void vscode.window.showInformationMessage('wbw kawaii: 未检测到 cpptools 扩展');
-      return;
-    }
-    const { dir, file, version } = located;
-    const meta = readMeta(path.join(dir, META_NAME));
+    const located = this.locateCpptools();
+    const locale = vscode.env.language;
     const cfg = vscode.workspace.getConfiguration('wbw-kawaii');
-    if (!fs.existsSync(file)) {
-      void vscode.window.showInformationMessage(`wbw kawaii: 没有消息文件（语言 ${vscode.env.language}）`);
-      return;
-    }
-    const content = fs.readFileSync(file, 'utf8');
-    const res = patchContent(content, {
-      decorateFallback: cfg.get<boolean>('fallbackDecorate', true)
-    });
-    const lines = [
-      `cpptools 版本: ${version}`,
-      `规则版本: ${RULES_VERSION}`,
-      `当前状态: ${meta ? `${meta.state}（${meta.cpptoolsVersion}）` : '未记录'}`,
-      `enabled: ${cfg.get('enabled', true)}, fallbackDecorate: ${cfg.get('fallbackDecorize', true)}`,
-      `本次试算: ${formatStats(res.stats)}`
+
+    const lines: string[] = [
+      `界面语言: ${locale}`,
+      `enabled: ${cfg.get('enabled', true)}, fallbackDecorate: ${cfg.get('fallbackDecorate', true)}`,
+      '',
+      '=== cpptools ==='
     ];
+
+    if (located) {
+      const { dir, file, version } = located;
+      const meta = readTargetMeta(path.join(dir, 'messages.json.wbw-kawaii.json'));
+      if (!fs.existsSync(file)) {
+        lines.push(`  状态: 没有消息文件（语言 ${locale}）`);
+      } else {
+        const content = fs.readFileSync(file, 'utf8');
+        const res = patchContent(content, { decorateFallback: cfg.get<boolean>('fallbackDecorate', true) });
+        lines.push(
+          `  版本: ${version}`,
+          `  规则版本: ${RULES_VERSION}`,
+          `  当前状态: ${meta ? `${meta.state}（${meta.sourceVersion}）` : '未记录'}`,
+          `  本次试算: ${formatStats(res.stats)}`
+        );
+      }
+    } else {
+      lines.push('  未安装 cpptools');
+    }
+
+    lines.push('', '=== TS / CSS / HTML ===');
+    try {
+      const targets = buildTargets();
+      for (const t of targets) {
+        if (t.id === 'cpptools') continue;
+        const meta = readTargetMeta(t.metaFile);
+        const exists = fs.existsSync(t.file);
+        if (!exists) {
+          lines.push(`  [${t.id}] 文件不存在`);
+          continue;
+        }
+        lines.push(
+          `  [${t.id}]`,
+          `    版本: ${t.versionProvider?.() ?? '?'}`,
+          `    规则版本: ${RULES_VERSION}`,
+          `    状态: ${meta ? meta.state : '未记录'}`,
+          `    locale: ${meta?.locale ?? '-'}`
+        );
+      }
+    } catch (e) {
+      lines.push(`  构建目标失败: ${String(e)}`);
+    }
+
     for (const l of lines) this.channel.appendLine(l);
     this.channel.show(true);
-    void vscode.window.showInformationMessage(`wbw kawaii: 详见输出面板 —— ${formatStats(res.stats)}`);
+    void vscode.window.showInformationMessage(`wbw kawaii: 详见输出面板`);
   }
 }
