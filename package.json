@@ -1,6 +1,6 @@
 {
   "name": "wbw-kawaii",
-  "displayName": "wbw kawaii C/C++ 报错",
+  "displayName": "wbw121124's kawaii 报错文案",
   "description": "把 C/C++ / TypeScript / CSS / HTML 的报错文案就地改写成可爱风格：规则表 + 正则兜底，全版本有效",
   "version": "0.2.0",
   "publisher": "wbw121124",
