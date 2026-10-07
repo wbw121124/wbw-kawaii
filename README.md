@@ -1,6 +1,6 @@
 # wbw kawaii
 
-让 VS Code 中 C/C++ 扩展（ms-vscode.cpptools）的报错提示变得可爱！
+让 VS Code 中 **C/C++ / TypeScript / CSS / HTML** 的报错提示变得可爱！
 
 配套 [errorlens](https://marketplace.visualstudio.com/items?itemName=usernamehw.errorlens) 食用效果更佳。
 
@@ -8,32 +8,48 @@
 
 参考了 [kawaii-vscode-cpptools](https://github.com/Gary-0925/kawaii-vscode-cpptools) 的做法，但换了实现思路：
 
-- **不替换** cpptools 的 `messages.json` / 翻译 JSON 文件（整文件替换绑定特定版本，扩展一更新就失效，还可能破坏新版本新增的条目）；
-- 而是**运行时定位当前安装的 cpptools 版本**，读取其 `bin/messages/<locale>/messages.json`，用**规则表按“原文文本”直接 replace**，未命中的条目再用**正则表达式追加统一可爱后缀**做兜底；
-- 规则以原文文本为键而不是数组下标，因此无论 cpptools 是 1.19、1.34 还是将来的版本，只要原文还在就能命中（实测对 1.19.7 / 1.34.4 / 1.35.3 三个版本的精确命中率均 ≥ 94%，其余走正则兜底，覆盖率 100%）；
-- **保留原文件格式**：UTF-8 无 BOM、CRLF、2/4 空格缩进、`null` 条目原样不动，写回前校验占位符（`%s`、`%sq`、`%t`、`%[...]` 等）序列一致，绝不弄坏格式化参数；
-- 首次改写前自动备份 `messages.json.orig`，随时可还原。
+- **不替换** 整个 `messages.json` / 翻译 JSON 文件（整文件替换绑定特定版本，扩展一更新就失效，还可能破坏新版本新增的条目）；
+- 而是**运行时定位当前安装的文件**，用**规则表按 key 直接 replace**，未命中的条目再用**正则表达式追加统一可爱后缀**做兜底；
+- 规则以 message key 为键（TS/CSS/HTML）或原文文本为键（cpptools），因此无论底层工具如何升级，只要 key 还在就能命中；
+- **保留原文件格式**：UTF-8 无 BOM、CRLF、缩进、JSON 结构原样不动，写回前校验占位符序列一致，绝不弄坏格式化参数；
+- 首次改写前自动备份，随时可还原。
+
+## 支持的报错来源
+
+| 来源 | 文件 | 策略 |
+| --- | --- | --- |
+| C/C++（cpptools） | `bin/messages/zh-cn/messages.json` | 原文文本键 + 2-基准覆盖 |
+| TypeScript / JavaScript | `typescript/lib/typescript.js` 诊断表 | messageKey 键 + zh JSON 主路径 |
+| TypeScript / JavaScript | `typescript/lib/zh-cn/diagnosticMessages.generated.json` | messageKey 键 + 创意变体 |
+| CSS / HTML | 语言包 `vscode.{css,html}-language-features.i18n.json` | 英文原文键 + 创意变体 |
+| CSS / HTML 模板串 | `cssServerMain.js` / `htmlServerMain.js` 内嵌模板 | 正则兜底后缀 |
+
+## 界面语言行为
+
+- **zh-cn**：所有报错文案可爱化（cpptools + TS + CSS/HTML）；
+- **非 zh-cn**（含 en）：新目标自动还原为英文原文，并弹出通知说明；cpptools 维持现有行为（其 zh 文件在 en 下本就不被读取，显示英文原文）。
 
 ## 要求
 
-- VS Code 显示语言为**中文（zh-cn）**（英文界面下 cpptools 没有本地化消息文件，无法改写）；
-- 已安装 C/C++ 扩展 `ms-vscode.cpptools`。
+- VS Code 显示语言为**中文（zh-cn）**以启用完整可爱化；
+- 已安装 C/C++ 扩展 `ms-vscode.cpptools`；
+- 已安装中文语言包 `ms-ceintl.vscode-language-pack-zh-hans`（CSS/HTML 可爱化依赖）。
 
 ## 安装
 
 1. 下载 `wbw-kawaii-<版本>.vsix`（[Releases](../../releases) 或 CI 产物，或自行 `npm run package`）；
 2. 扩展面板 → 右上角 `…` → **从 VSIX 安装**；
-3. 重载窗口。之后打开一个有报错的 C/C++ 文件即可看到效果。
+3. 重载窗口。之后打开有报错的任意支持文件即可看到效果。
 
-cpptools 扩展升级后，本扩展会自动检测版本变化、对新目录重新改写并提示重载。
+各扩展升级后，本扩展会自动检测版本变化、重新改写并提示重载。
 
 ## 命令
 
 | 命令 | 说明 |
 | --- | --- |
-| `Kawaii: 重新改写 cpptools 报错文案` | 手动触发改写 |
-| `Kawaii: 还原 cpptools 原始报错文案` | 从 `messages.json.orig` 备份还原 |
-| `Kawaii: 查看改写状态与覆盖率` | 在输出面板查看统计 |
+| `Kawaii: 重新改写报错文案` | 手动触发所有目标改写 |
+| `Kawaii: 还原原始报错文案` | 从备份还原所有目标（cpptools + TS + CSS/HTML） |
+| `Kawaii: 查看改写状态与覆盖率` | 在输出面板查看各目标状态 |
 
 ## 设置
 
@@ -46,43 +62,48 @@ cpptools 扩展升级后，本扩展会自动检测版本变化、对新目录�
 ## 工作原理
 
 ```
-启动 / cpptools 版本变化
-   └─ 定位 ~/.vscode/extensions/ms-vscode.cpptools-<ver>/bin/messages/<locale>/messages.json
-      ├─ meta 状态校验（rulesVersion + cpptoolsVersion + 哈希）→ 已改写则跳过
-      ├─ 逐行解析：null 原样 | 规则表直接 replace | 正则兜底装饰
-      ├─ 备份 messages.json.orig → 写回 → 更新 meta
-      └─ 提示重载窗口
+启动 / 扩展版本变化 / 配置变化
+  ├─ zh-cn：对每个目标执行补丁流程
+  │   ├─ cpptools：messages.json 逐行规则 replace + 正则兜底
+  │   ├─ tsDiag：typescript.js diag 表 messageKey 查 TS_RULES
+  │   ├─ tsLocale：zh-cn JSON 逐行规则 replace
+  │   ├─ packCss / packHtml：语言包 contents.bundle value 替换
+  │   └─ bundleCss / bundleHtml：模板字面量追加后缀
+  │   └─ 写入 targets-manifest.json（卸载还原清单）
+  └─ 非 zh-cn：还原所有新目标为英文原文 + 弹通知
 ```
 
 规则表由 `scripts/build-rules.mjs` 在开发期生成：
 
-- 基准 1：cpptools **1.34.4** 原文 ↔ kawaii 文案（逐索引配对，校验占位符序列）；
-- 基准 2：cpptools **1.19.7** 原文 ↔ 同索引文案（占位符序列一致才采纳）；
-- 重复原文生成“变体数组”，运行时按条目索引轮转，保留不同语气；
-- 产物 `src/rules.generated.ts` 提交进仓库，CI 会校验其与基线一致。
+- **cpptools RULES**：双基准（1.34.4 + 1.19.7）原文 ↔ 可爱文案，占位符序列校验；
+- **TS_RULES**：2118 条 TypeScript 诊断消息，子代理按 hash 选创意角度重写（6 种句式轮换）；
+- **PACK_RULES**：252 条 CSS/HTML 语言包消息，同样创意重写；
+- 产物 `src/rules.generated.ts` 提交进仓库，CI 校验其与分块输入一致。
 
 ## 开发
 
 ```bash
 npm ci                    # 依赖（建议 node_modules 放在 C 盘，U 盘上可用 mklink /J 做目录联接）
 npm run fetch-baseline    # 下载 cpptools vsix 提取原始 messages.json（~300MB，一次性）
-npm run build:rules       # 生成 src/rules.generated.ts
-npm test                  # tsc 编译 + node:test 单测（含三版本覆盖率断言）
+npm run extract:inputs    # 从本机 VS Code 提取 TS/语言包 inventory（需本地环境）
+npm run build:rules       # 合并分块生成 src/rules.generated.ts（CI 可跑）
+npm test                  # tsc 编译 + node:test 单测（含多版本覆盖率断言）
 npm run package           # 打出 .vsix
 ```
 
-CI（`.github/workflows/build.yml`）在每次 push 时自动完成上述流程并上传 `.vsix` 产物。
+CI（`.github/workflows/build.yml`）在每次 push 时自动完成编译 + 测试并上传 `.vsix` 产物。
 
 ## 已知限制
 
-- 仅支持中文界面（`zh-cn` 等有本地化文件的语言），英文界面下 cpptools 把英文原文编译在二进制里，没有可改写的文件；
-- 改写发生在磁盘文件上，cpptools 语言服务器启动时读取，因此改写后需要重载窗口；
-- 若微软未来对 `messages.json` 增加完整性校验（目前没有），本方案会失效；
-- 卸载本扩展后，`vscode:uninstall` 钩子会在下一次**完全重启** VS Code（退出全部进程再启动，重载窗口不触发）时自动把 cpptools 文案还原并清理备份；钩子未生效时，重新安装本扩展后执行“还原”命令，或重装 cpptools。
+- zh-cn 以外界面：TS/CSS/HTML 目标自动还原为英文原文，cpptools 维持现有行为；
+- 改写发生在磁盘文件上，语言服务器启动时读取，因此改写后需要重载窗口；
+- 语言包升级后目录名变化，但本扩展通过 extensionId 定位，自动重打；
+- 若微软未来对诊断 JSON 增加完整性校验（目前没有），本方案会失效；
+- 卸载本扩展后，`vscode:uninstall` 钩子会在下一次**完全重启** VS Code（退出全部进程再启动，重载窗口不触发）时自动还原所有目标并清理备份。
 
 ## 致谢
 
-- [Gary-0925/kawaii-vscode-cpptools](https://github.com/Gary-0925/kawaii-vscode-cpptools) — 可爱文案来源（MIT，见 `assets/reference/NOTICE`）；
+- [Gary-0925/kawaii-vscode-cpptools](https://github.com/Gary-0925/kawaii-vscode-cpptools) — cpptools 可爱文案来源（MIT，见 `assets/reference/NOTICE`）；
 - [Bill-Haku/kawaii-gcc](https://github.com/Bill-Haku/kawaii-gcc) — 灵感来源。
 
 ## 许可

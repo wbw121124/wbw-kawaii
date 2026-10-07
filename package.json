@@ -1,8 +1,8 @@
 {
   "name": "wbw-kawaii",
   "displayName": "wbw kawaii C/C++ 报错",
-  "description": "把 ms-vscode.cpptools 的报错文案就地改写成可爱风格：正则/直接 replace，不替换整个 message.json，全版本有效",
-  "version": "0.1.1",
+  "description": "把 C/C++ / TypeScript / CSS / HTML 的报错文案就地改写成可爱风格：规则表 + 正则兜底，全版本有效",
+  "version": "0.2.0",
   "publisher": "wbw121124",
   "license": "MPL-2.0",
   "repository": {
@@ -19,8 +19,11 @@
     "cpptools",
     "kawaii",
     "cute",
-    "C++",
-    "error"
+    "typescript",
+    "css",
+    "html",
+    "error",
+    "vscode"
   ],
   "activationEvents": [
     "onStartupFinished"
@@ -30,11 +33,11 @@
     "commands": [
       {
         "command": "wbw-kawaii.patch",
-        "title": "Kawaii: 重新改写 cpptools 报错文案"
+        "title": "Kawaii: 重新改写报错文案"
       },
       {
         "command": "wbw-kawaii.restore",
-        "title": "Kawaii: 还原 cpptools 原始报错文案"
+        "title": "Kawaii: 还原原始报错文案"
       },
       {
         "command": "wbw-kawaii.status",
