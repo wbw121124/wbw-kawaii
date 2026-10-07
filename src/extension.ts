@@ -31,5 +31,6 @@ export function activate(context: vscode.ExtensionContext): void {
 }
 
 export function deactivate(): void {
-  // 卸载/关闭时不自动还原（避免启动竞态污染），备份与还原命令常驻可用
+  // 关闭窗口/退出时一律不还原（避免启动竞态污染）；卸载还原走 package.json 的
+  // vscode:uninstall 钩子（out/uninstall-restore.js，在卸载后的下一次完全重启时执行）
 }

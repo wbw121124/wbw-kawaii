@@ -2,7 +2,7 @@
   "name": "wbw-kawaii",
   "displayName": "wbw kawaii C/C++ 报错",
   "description": "把 ms-vscode.cpptools 的报错文案就地改写成可爱风格：正则/直接 replace，不替换整个 message.json，全版本有效",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "publisher": "wbw121124",
   "license": "MPL-2.0",
   "repository": {
@@ -67,8 +67,9 @@
     "build:rules": "node scripts/build-rules.mjs",
     "compile": "tsc -p ./",
     "watch": "tsc -w -p ./",
-    "test": "tsc -p ./ && node --test test/transform.test.cjs",
-    "package": "vsce package"
+    "test": "tsc -p ./ && node --test test/transform.test.cjs test/uninstall-restore.test.cjs",
+    "package": "vsce package",
+    "vscode:uninstall": "node ./out/uninstall-restore.js"
   },
   "devDependencies": {
     "@types/node": "^20.14.0",
