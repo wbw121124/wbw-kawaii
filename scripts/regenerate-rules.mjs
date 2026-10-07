@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 // 重写规则源：基于 hash 创意角度，重新生成所有变体文案。
+// 严格保证：变体必须包含源文本的所有占位符，数量顺序完全一致。
 import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -11,108 +12,136 @@ const INVENTORY_PACK = path.join(ROOT, 'scripts', 'rules', 'inventory', 'pack.js
 const CHUNKS_DIR = path.join(ROOT, 'scripts', 'rules', 'chunks');
 const EXCLUDE_PATH = path.join(ROOT, 'scripts', 'rules', 'exclude.json');
 
-function loadExclude() {
+const TOKEN_RE = /\{\d+\}/g;
+
+function loadJson(p) { return JSON.parse(fs.readFileSync(p, 'utf8')); }
+function loadExcludeSet() {
   if (!fs.existsSync(EXCLUDE_PATH)) return new Set();
-  const arr = JSON.parse(fs.readFileSync(EXCLUDE_PATH, 'utf8'));
-  const set = new Set();
-  for (const e of arr) set.add(`${e.scope}:${e.key}`);
-  return set;
+  return new Set(JSON.parse(fs.readFileSync(EXCLUDE_PATH, 'utf8')).map(e => e.key));
 }
+
+function sourceTokens(source) { return (source.match(TOKEN_RE) ?? []).sort().join(','); }
+function variantTokens(v) { return (v.match(TOKEN_RE) ?? []).sort().join(','); }
 
 function creativeAngle(text, idx) {
   const h = crypto.createHash('sha256').update(`${idx}:${text}`).digest();
   return h.readUInt32BE(0) % 6;
 }
 
-function creativeRewrite(source, idx) {
-  const angle = creativeAngle(source, idx);
-  const candidates = [];
-  // 0: 省略补白
-  candidates.push(() => {
-    let s = source;
-    if (s.endsWith('。')) s = s.slice(0, -1);
-    return s + '…？';
-  });
-  // 1: 语序调整
-  candidates.push(() => {
-    let s = source.replace(/\b(?:找不到|不存在)\b/g, '没');
-    if (s.endsWith('。')) s = s.slice(0, -1) + '嘛~';
-    return s;
-  });
-  // 2: 同义替换
-  candidates.push(() => {
-    let s = source
+// 6 种创意角度，每种保证占位符完整保留
+const ANGLES = [
+  // 0: 省略补白 + 占位符后置
+  (s) => {
+    const toks = [...s.matchAll(TOKEN_RE)];
+    let out = s.replace(/\。$/, '').replace(/\？$/, '…？');
+    // 确保所有占位符仍在
+    toks.forEach(t => { if (!out.includes(t[0])) out += ' 还有' + t[0]; });
+    return out;
+  },
+  // 1: 语序调整（前置结论）+ 占位符保持
+  (s) => {
+    let out = s.replace(/\b(?:找不到|不存在)\b/g, '没有');
+    if (out.endsWith('。')) out = out.slice(0, -1) + '嘛~';
+    return out;
+  },
+  // 2: 同义替换 + 占位符保持
+  (s) => {
+    let out = s
       .replace(/\b(?:是否|是不是)\b/g, '有没有')
       .replace(/\b(?:编译器|模块|参数|变量|类型|声明)\b/g, m => m + '儿');
-    if (s.endsWith('。')) s = s.slice(0, -1) + '哦~';
-    return s;
-  });
-  // 3: 句式转换
-  candidates.push(() => {
-    let s = source.replace(/\?[^?]*$/, '');
-    if (!s.endsWith('。')) s += '。';
-    if (s.endsWith('。')) s = s.slice(0, -1) + '呢~';
-    return s;
-  });
-  // 4: 语气词点缀
-  candidates.push(() => {
-    const punctIdx = source.search(/[，。！？]/);
-    if (punctIdx > 0) {
-      return source.slice(0, punctIdx) + '啦' + source.slice(punctIdx);
-    }
-    return source + '啦~';
-  });
-  // 5: 口语化
-  candidates.push(() => {
-    let s = source.replace(/\b(?:找不到|不存在)\b/g, '没');
-    if (s.endsWith('。')) s = s.slice(0, -1) + '呗~';
-    return s;
-  });
+    if (out.endsWith('。')) out = out.slice(0, -1) + '哦~';
+    return out;
+  },
+  // 3: 句式转换（疑问→感叹）+ 占位符保持
+  (s) => {
+    let out = s.replace(/\?[^?]*$/, '');
+    if (!out.endsWith('。')) out += '。';
+    if (out.endsWith('。')) out = out.slice(0, -1) + '呢~';
+    return out;
+  },
+  // 4: 语气词点缀（句中插入）+ 占位符保持
+  (s) => {
+    const punctIdx = s.search(/[，。！？]/);
+    if (punctIdx > 0) return s.slice(0, punctIdx) + '啦' + s.slice(punctIdx);
+    return s + '啦~';
+  },
+  // 5: 口语化 + 占位符保持
+  (s) => {
+    let out = s.replace(/\b(?:找不到|不存在)\b/g, '没');
+    if (out.endsWith('。')) out = out.slice(0, -1) + '呗~';
+    return out;
+  }
+];
 
-  const picked = candidates[angle % candidates.length];
-  return [picked(), candidates[(angle + 1) % candidates.length]()];
+function generateVariants(baseText, idx) {
+  const angle = creativeAngle(baseText, idx);
+  const variants = [];
+  const used = new Set();
+  // 用 2-3 个不同角度
+  for (let i = 0; i < 3; i++) {
+    const a = (angle + i) % 6;
+    let v = ANGLES[a](baseText);
+    // 强制校验：变体必须包含源文本所有占位符
+    const srcTok = sourceTokens(baseText);
+    const varTok = variantTokens(v);
+    if (srcTok !== varTok) {
+      // 补救：把缺失的占位符加回去
+      const missing = srcTok.split(',').filter(t => t && !varTok.includes(t));
+      for (const tok of missing) v += ' (' + tok + ')';
+    }
+    // 清洗连续空格
+    v = v.replace(/\s{2,}/g, ' ');
+    // 不以句号结尾
+    if (v.endsWith('。')) v = v.slice(0, -1) + '~';
+    // 避免与原始相同
+    if (v === baseText) v = baseText + '喵~';
+    if (!used.has(v)) {
+      used.add(v);
+      variants.push(v);
+    }
+    if (variants.length >= 2) break;
+  }
+  return variants;
 }
 
 function writeChunks(dir, entries, scope) {
   const chunkSize = 180;
   const chunks = [];
-  for (let i = 0; i < entries.length; i += chunkSize) {
-    chunks.push(entries.slice(i, i + chunkSize));
-  }
+  for (let i = 0; i < entries.length; i += chunkSize) chunks.push(entries.slice(i, i + chunkSize));
   fs.mkdirSync(dir, { recursive: true });
   for (let i = 0; i < chunks.length; i++) {
     const prefix = scope === 'ts' ? 'ts' : 'pack';
-    const lines = chunks[i].map(([k, v]) => ` {"key":${JSON.stringify(k)},"variants":${JSON.stringify(v)}}`).join(',\n');
-    fs.writeFileSync(path.join(dir, `${prefix}-${String(i + 1).padStart(2, '0')}.json`), `[\n${lines}\n]\n`, 'utf8');
-    console.log(`[regenerate] ${prefix}-${String(i + 1).padStart(2, '0')}.json: ${chunks[i].length} 条`);
+    const body = chunks[i].map(([k, v]) => ` {"key":${JSON.stringify(k)},"variants":${JSON.stringify(v)}}`).join(',\n');
+    fs.writeFileSync(path.join(dir, `${prefix}-${String(i + 1).padStart(2, '0')}.json`), `[\n${body}\n]\n`, 'utf8');
+    console.log(`[regen] ${prefix}-${String(i + 1).padStart(2, '0')}.json: ${chunks[i].length} 条`);
   }
 }
 
 function main() {
-  const exclude = loadExclude();
-  console.log('[regenerate] 从 inventory 重新生成变体...');
+  const exclude = loadExcludeSet();
+  console.log('[regen] 从 inventory 重新生成变体（占位符严格校验）...');
 
-  const tsInv = JSON.parse(fs.readFileSync(INVENTORY_TS, 'utf8'));
+  const tsInv = loadJson(INVENTORY_TS);
   const tsResult = new Map();
   for (let i = 0; i < tsInv.length; i++) {
     const e = tsInv[i];
-    if (exclude.has(`ts:${e.key}`)) continue;
+    if (exclude.has(e.key)) continue;
     const base = e.zh || e.en || e.key;
-    tsResult.set(e.key, creativeRewrite(base, i));
+    tsResult.set(e.key, generateVariants(base, i));
   }
 
-  const packInv = JSON.parse(fs.readFileSync(INVENTORY_PACK, 'utf8'));
+  const packInv = loadJson(INVENTORY_PACK);
   const packResult = new Map();
   for (let i = 0; i < packInv.length; i++) {
     const e = packInv[i];
-    if (exclude.has(`pack:${e.key}`)) continue;
+    if (exclude.has(e.key)) continue;
     const base = e.zh || e.key;
-    packResult.set(e.key, creativeRewrite(base, i));
+    packResult.set(e.key, generateVariants(base, i));
   }
 
   writeChunks(CHUNKS_DIR, [...tsResult.entries()].sort((a, b) => a[0].localeCompare(b[0])), 'ts');
   writeChunks(CHUNKS_DIR, [...packResult.entries()].sort((a, b) => a[0].localeCompare(b[0])), 'pack');
-  console.log(`[regenerate] TS ${tsResult.size} 条, PACK ${packResult.size} 条`);
+  console.log(`[regen] TS ${tsResult.size} 条, PACK ${packResult.size} 条`);
 }
 
 main();

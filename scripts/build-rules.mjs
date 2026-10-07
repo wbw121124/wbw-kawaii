@@ -2,8 +2,10 @@
 // 生成 src/rules.generated.ts：
 //   基准1: cpptools 1.34.4 原文 <-> kawaii 文案（逐索引配对）
 //   基准2: cpptools 1.19.7 原文 <-> 同索引 kawaii 文案（占位符序列一致才采纳）
-// 规则以“原文文本”为键（不依赖索引），因此对任意版本 cpptools 的
-// messages.json 都可就地直接 replace；未命中条目由运行时正则兜底装饰。
+//   TS 规则: scripts/rules/chunks/ts-*.json 按 key 汇总
+//   PACK 规则: scripts/rules/chunks/pack-*.json 按 key 汇总
+// 规则以"原文文本"为键（cpptools），TS/PACK 以 messageKey 为键。
+// 未命中条目由运行时正则兜底装饰。
 // 用法: node scripts/build-rules.mjs
 import fs from 'node:fs';
 import path from 'node:path';
@@ -14,6 +16,8 @@ const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const BASE_DIR = path.join(ROOT, 'assets', 'baseline');
 const KAWAII_PATH = path.join(ROOT, 'assets', 'reference', 'messages.json');
 const OUT_PATH = path.join(ROOT, 'src', 'rules.generated.ts');
+const CHUNKS_TS_DIR = path.join(ROOT, 'scripts', 'rules', 'chunks');
+const EXCLUDE_PATH = path.join(ROOT, 'scripts', 'rules', 'exclude.json');
 
 const PRIMARY = '1.34.4';
 const SECONDARY = '1.19.7';
@@ -41,6 +45,7 @@ function assertArray(name, v) {
   }
 }
 
+// ========== cpptools RULES ==========
 const kawaii = loadJson(KAWAII_PATH);
 assertArray('kawaii 文案', kawaii);
 const primary = loadJson(path.join(BASE_DIR, `orig-${PRIMARY}.json`));
@@ -61,9 +66,7 @@ if (nullMismatch > 0) {
 }
 
 // key -> Set<variant>
-const rules = new Map();
-// 参考文案原样保留的原文（orig === kawaii）：多为拼接片段/类型名/标签，
-// 运行时会被 cpptools 拼进完整消息，绝不能追加兜底后缀（会注进消息中间）
+const cpptoolsRules = new Map();
 const identityValues = new Set();
 let identity = 0;
 let addedPrimary = 0;
@@ -81,8 +84,8 @@ function tryAdd(orig, cute, tag) {
     }
     return false;
   }
-  let set = rules.get(orig);
-  if (!set) { set = new Set(); rules.set(orig, set); }
+  let set = cpptoolsRules.get(orig);
+  if (!set) { set = new Set(); cpptoolsRules.set(orig, set); }
   const before = set.size;
   set.add(cute);
   if (set.size > before) addedPrimary += (tag === 'p' ? 1 : 0);
@@ -107,46 +110,127 @@ if (fs.existsSync(secondaryPath)) {
     const o = secondary[i];
     const k = kawaii[i];
     if (o === null || k === null) continue;
-    if (o === primary[i]) continue; // 基准1 已覆盖
+    if (o === primary[i]) continue;
     if (o === k) { identityValues.add(o); continue; }
     const tOrig = tokens(o);
     const tCute = tokens(k);
     if (seqKey(tOrig) !== seqKey(tCute)) continue;
-    let set = rules.get(o);
-    if (!set) { set = new Set(); rules.set(o, set); }
+    let set = cpptoolsRules.get(o);
+    if (!set) { set = new Set(); cpptoolsRules.set(o, set); }
     const before = set.size;
     set.add(k);
     if (set.size > before) addedSecondary++;
   }
 }
 
-// 与规则冲突时规则优先（参考在别处明确改写了该原文，可安全装饰）
-for (const key of rules.keys()) identityValues.delete(key);
+// 与规则冲突时规则优先
+for (const key of cpptoolsRules.keys()) identityValues.delete(key);
 const identityList = [...identityValues].sort();
 
-// 重复原文（多变体）统计
 let dupGroups = 0;
 let dupMultiVariant = 0;
-for (const [, v] of rules) {
+for (const [, v] of cpptoolsRules) {
   if (v.size >= 1) {
     dupGroups++;
     if (v.size > 1) dupMultiVariant++;
   }
 }
 
-// 生成 TS
+// ========== TS / PACK 规则 ==========
+function loadChunkFile(f) {
+  try { return JSON.parse(fs.readFileSync(f, 'utf8')); } catch { return null; }
+}
+
+function loadExcludeSet() {
+  if (!fs.existsSync(EXCLUDE_PATH)) return new Set();
+  return new Set(JSON.parse(fs.readFileSync(EXCLUDE_PATH, 'utf8')).map(e => e.key));
+}
+
+function collectChunks(pattern, scope, invMap) {
+  const entries = [];
+  for (const f of fs.readdirSync(CHUNKS_TS_DIR).filter(n => n.match(pattern))) {
+    const arr = loadChunkFile(path.join(CHUNKS_TS_DIR, f));
+    if (!arr) { console.error(`[build] 无法解析: ${f}`); continue; }
+    for (const e of arr) {
+      if (!e || typeof e.key !== 'string' || !Array.isArray(e.variants)) {
+        console.error(`[build] 条目结构异常: ${JSON.stringify(e)?.slice(0, 120)}`);
+        process.exit(1);
+      }
+      // TS 的 key 是消息标识符（不含占位符），源文本在 invMap.get(key)
+      const sourceText = scope === 'ts' ? (invMap?.get(e.key)?.zh ?? invMap?.get(e.key)?.en ?? e.key) : e.key;
+      for (const v of e.variants) {
+        if (typeof v !== 'string') {
+          console.error(`[build] 变体非字符串: ${e.key}`);
+          process.exit(1);
+        }
+        const tSrc = tokens(sourceText);
+        const tVar = tokens(v);
+        if (seqKey(tSrc) !== seqKey(tVar)) {
+          console.error(`[build] 占位符不一致: ${scope}:${e.key}`);
+          console.error(`  source tokens: ${JSON.stringify(tSrc)} (source: ${JSON.stringify(sourceText)?.slice(0,80)})`);
+          console.error(`  variant tokens: ${JSON.stringify(tVar)}`);
+          console.error(`  variant: ${v}`);
+          process.exit(1);
+        }
+      }
+      entries.push(e);
+    }
+  }
+  return entries;
+}
+
+const excludeSet = loadExcludeSet();
+
+// TS 的 key 是消息标识符（不含占位符），源文本在 inventory
+let tsInvMap = null;
+try {
+  const tsInv = JSON.parse(fs.readFileSync(path.join(ROOT, 'scripts', 'rules', 'inventory', 'ts.json'), 'utf8'));
+  tsInvMap = new Map(tsInv.map(e => [e.key, e]));
+} catch (e) {
+  console.warn(`[build] 无法加载 TS inventory: ${e.message}`);
+}
+
+const tsEntries = collectChunks(/^ts-\d+\.json$/, 'ts', tsInvMap);
+const packEntries = collectChunks(/^pack-\d+\.json$/, 'pack', null);
+
+const tsRules = new Map();
+for (const e of tsEntries) {
+  if (excludeSet.has(e.key)) continue;
+  tsRules.set(e.key, [...new Set(e.variants)]);
+}
+
+const packRules = new Map();
+for (const e of packEntries) {
+  if (excludeSet.has(e.key)) continue;
+  packRules.set(e.key, [...new Set(e.variants)]);
+}
+
+let tsMissed = 0, packMissed = 0;
+for (const e of tsEntries) if (!tsRules.has(e.key)) tsMissed++;
+for (const e of packEntries) if (!packRules.has(e.key)) packMissed++;
+
+// ========== 生成 rules.generated.ts ==========
 const obj = {};
-for (const [k, v] of [...rules.entries()].sort((a, b) => (a[0] < b[0] ? -1 : 1))) {
+for (const [k, v] of [...cpptoolsRules.entries()].sort((a, b) => (a[0] < b[0] ? -1 : 1))) {
   obj[k] = [...v];
 }
 const canonical = JSON.stringify(obj);
 const identityCanonical = JSON.stringify(identityList);
-const version = 'sha256:' + crypto.createHash('sha256').update(canonical + '\n' + identityCanonical).digest('hex').slice(0, 16);
+const tsObj = {};
+for (const [k, v] of [...tsRules.entries()].sort((a, b) => a[0].localeCompare(b[0]))) tsObj[k] = v;
+const packObj = {};
+for (const [k, v] of [...packRules.entries()].sort((a, b) => a[0].localeCompare(b[0]))) packObj[k] = v;
+const tsCanonical = JSON.stringify(tsObj);
+const packCanonical = JSON.stringify(packObj);
+
+const fullCanonical = canonical + '\n' + identityCanonical + '\n' + tsCanonical + '\n' + packCanonical;
+const version = 'sha256:' + crypto.createHash('sha256').update(fullCanonical).digest('hex').slice(0, 16);
 
 const lines = [];
 lines.push('// AUTO-GENERATED by scripts/build-rules.mjs —— 不要手改。');
 lines.push(`// 基准: cpptools ${PRIMARY} + ${SECONDARY} (zh-cn messages.json)`);
 lines.push('// 文案: Gary-0925/kawaii-vscode-cpptools (MIT, 见 assets/reference/NOTICE)');
+lines.push(`// TS/PACK 规则: ${tsRules.size} + ${packRules.size} 条（规则版本 ${version}）`);
 lines.push(`export const RULES_VERSION = ${JSON.stringify(version)};`);
 lines.push('export const RULES: Record<string, string[]> = {');
 for (const [k, v] of Object.entries(obj)) {
@@ -158,6 +242,16 @@ for (const v of identityList) {
   lines.push(`  ${JSON.stringify(v)},`);
 }
 lines.push('];');
+lines.push('export const TS_RULES: Record<string, string[]> = {');
+for (const [k, v] of Object.entries(tsObj)) {
+  lines.push(`  ${JSON.stringify(k)}: ${JSON.stringify(v)},`);
+}
+lines.push('};');
+lines.push('export const PACK_RULES: Record<string, string[]> = {');
+for (const [k, v] of Object.entries(packObj)) {
+  lines.push(`  ${JSON.stringify(k)}: ${JSON.stringify(v)},`);
+}
+lines.push('};');
 lines.push('');
 fs.mkdirSync(path.dirname(OUT_PATH), { recursive: true });
 fs.writeFileSync(OUT_PATH, lines.join('\n'));
@@ -165,10 +259,12 @@ fs.writeFileSync(OUT_PATH, lines.join('\n'));
 // 覆盖率报告
 const totalBytes = fs.statSync(OUT_PATH).size;
 console.log(`生成 ${path.relative(ROOT, OUT_PATH)} (${(totalBytes / 1024).toFixed(0)} KB, RULES_VERSION=${version})`);
-console.log(`基准1 ${PRIMARY}: 规则键 ${rules.size}, 保留原文(identity) ${identity} 条（唯一值 ${identityList.length}，导出 IDENTITY_VALUES）, 占位符换序跳过 ${skipOrderSwap}, 占位符不一致跳过 ${skipPlaceholder}`);
-console.log(`基准2 ${SECONDARY}: 新增键 ${addedSecondary}, 多变体键 ${dupMultiVariant}`);
+console.log(`cpptools: 规则键 ${cpptoolsRules.size}, identity ${identity} 条（唯一值 ${identityList.length}），占位符换序跳过 ${skipOrderSwap}, 占位符不一致跳过 ${skipPlaceholder}`);
+console.log(`TS: ${tsRules.size} 条, PACK: ${packRules.size} 条`);
+if (tsMissed > 0) console.warn(`[warn] TS 未覆盖 ${tsMissed} 条`);
+if (packMissed > 0) console.warn(`[warn] PACK 未覆盖 ${packMissed} 条`);
 
-console.log('\n覆盖率（按原文文本精确命中规则表的非 null 条目占比）:');
+console.log('\ncpptools 覆盖率（按原文文本精确命中规则表的非 null 条目占比）:');
 for (const ver of COVERAGE) {
   const p = path.join(BASE_DIR, `orig-${ver}.json`);
   if (!fs.existsSync(p)) { console.log(`  ${ver}: 缺基线，跳过`); continue; }
@@ -177,7 +273,7 @@ for (const ver of COVERAGE) {
   for (const e of arr) {
     if (e === null) continue;
     nonNull++;
-    if (rules.has(e)) hit++;
+    if (cpptoolsRules.has(e)) hit++;
   }
   console.log(`  ${ver}: ${hit}/${nonNull} = ${(hit / nonNull * 100).toFixed(2)}%`);
 }
