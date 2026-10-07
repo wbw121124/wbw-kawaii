@@ -3,7 +3,8 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as crypto from 'crypto';
 import { patchContent, formatStats, RULES_VERSION, PatchOptions } from './transform';
-import { patchTsDiag, patchJsonObject, patchPackBundle, patchBundleTemplate } from './transform-new';
+import { patchTsDiag, patchJsonObject, patchPackBundle, patchBundleTemplate, transformMarkdownlint, transformPylint } from './transform-new';
+import { interceptDiagnosticCollection } from './intercept';
 import {
   buildTargets, TargetDef, TargetMeta, readTargetMeta, writeTargetMeta,
   shouldPatchTarget
@@ -68,6 +69,20 @@ export class KawaiiPatcher {
     const opts: PatchOptions = {
       decorateFallback: cfg.get<boolean>('fallbackDecorate', true)
     };
+
+    // ===== 运行时拦截：markdownlint / pylint DiagnosticCollection =====
+    if (isZhCn && cfg.get<boolean>('enableMarkdownlint', true)) {
+      const { MARKDOWNLINT_RULES } = require('./rules.generated');
+      interceptDiagnosticCollection('markdownlint', (source, message) =>
+        transformMarkdownlint(message, MARKDOWNLINT_RULES));
+      this.log('[markdownlint] 运行时拦截已激活');
+    }
+    if (isZhCn && cfg.get<boolean>('enablePylint', true)) {
+      const { PACK_RULES } = require('./rules.generated');
+      interceptDiagnosticCollection('PyLinter', (source, message) =>
+        transformPylint(message, PACK_RULES));
+      this.log('[pylint] 运行时拦截已激活');
+    }
 
     // ===== 现有 cpptools 流程（locale 门控：非 zh-cn 时还原）=====
     if (!isZhCn) {

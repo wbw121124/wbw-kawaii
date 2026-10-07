@@ -61,6 +61,16 @@
           "type": "boolean",
           "default": true,
           "description": "改写/还原后弹出通知，提示重载窗口使新文案生效"
+        },
+        "wbw-kawaii.enableMarkdownlint": {
+          "type": "boolean",
+          "default": true,
+          "description": "启用 markdownlint 报错可爱化（运行时拦截）"
+        },
+        "wbw-kawaii.enablePylint": {
+          "type": "boolean",
+          "default": true,
+          "description": "启用 pylint 报错可爱化（运行时拦截）"
         }
       }
     }

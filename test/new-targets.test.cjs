@@ -119,3 +119,54 @@ test('PACK_RULES 所有变体占位符与键（即英文原文）一致', () => 
     }
   }
 });
+
+// ========== transformMarkdownlint ==========
+test('transformMarkdownlint: 命中规则替换 description', () => {
+  const { transformMarkdownlint } = require('../out/transform-new.js');
+  const rules = { 'MD013': ['行太长了啦~', '行长度超标了喵~'] };
+  assert.strictEqual(
+    transformMarkdownlint('MD013: Line length', rules),
+    'MD013: 行太长了啦~'
+  );
+});
+
+test('transformMarkdownlint: 无规则兜底后缀', () => {
+  const { transformMarkdownlint } = require('../out/transform-new.js');
+  assert.strictEqual(
+    transformMarkdownlint('MD999: Unknown rule', {}),
+    'MD999: Unknown rule 喵~'
+  );
+});
+
+test('transformMarkdownlint: 已带后缀不重复', () => {
+  const { transformMarkdownlint } = require('../out/transform-new.js');
+  assert.strictEqual(
+    transformMarkdownlint('MD001: heading 喵~', {}),
+    'MD001: heading 喵~'
+  );
+});
+
+// ========== transformPylint ==========
+test('transformPylint: 命中规则替换 description', () => {
+  const { transformPylint } = require('../out/transform-new.js');
+  const rules = { 'C0114': ['缺少模块文档啦~', '模块文档不见咯~'] };
+  const result = transformPylint('C0114: Missing module docstring', rules);
+  // hash 轮转选变体，只需验证格式正确且包含可爱文案
+  assert.ok(result.startsWith('C0114: '), `got: ${result}`);
+  assert.ok(result !== 'C0114: Missing module docstring', '应被改写');
+});
+
+test('transformPylint: 无规则兜底后缀', () => {
+  const { transformPylint } = require('../out/transform-new.js');
+  assert.strictEqual(
+    transformPylint('Z9999: Unknown', {}),
+    'Z9999: Unknown 喵~'
+  );
+});
+
+// ========== interceptDiagnosticCollection（纯函数测试）==========
+test('interceptDiagnosticCollection: 不重复注册同一 source', () => {
+  const { interceptDiagnosticCollection } = require('../out/intercept.js');
+  // 已在 module scope 注册过 → 幂等（不抛出即可）
+  assert.doesNotThrow(() => interceptDiagnosticCollection('markdownlint', () => 'x'));
+});

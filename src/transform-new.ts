@@ -146,3 +146,45 @@ export function patchBundleTemplate(content: string, suffix: string): { content:
   result = parts.join('');
   return { content: result, stats: { hits, decorated }, changed };
 }
+
+// MarkdownLint 消息变换：按 ruleCode 查规则表，变 description 部分
+// 消息格式："MD013" 或 "MD001/atx: heading style"
+export function transformMarkdownlint(
+  message: string,
+  rules: Record<string, string[]>
+): string {
+  const m = message.match(/^([A-Z]{2}\d{3}(?:\/[\w-]+)?):\s*(.*)$/);
+  if (!m) return message;
+  const [, code, desc] = m;
+  const variants = rules[code];
+  if (variants && variants.length > 0) {
+    const h = crypto.createHash('sha256').update(code).digest();
+    const idx = h.readUInt32BE(0) % variants.length;
+    return `${code}: ${variants[idx]}`;
+  }
+  if (desc.trim() && !desc.endsWith(' 喵~')) {
+    return `${code}: ${desc} 喵~`;
+  }
+  return message;
+}
+
+// PyLint 消息变换：按 msg_id 查规则表，变 description 部分
+// 消息格式："C0114: Missing module docstring"
+export function transformPylint(
+  message: string,
+  rules: Record<string, string[]>
+): string {
+  const m = message.match(/^([A-Za-z]\d{4}):?\s*(.*)$/);
+  if (!m) return message;
+  const [, code, desc] = m;
+  const variants = rules[code];
+  if (variants && variants.length > 0) {
+    const h = crypto.createHash('sha256').update(code).digest();
+    const idx = h.readUInt32BE(0) % variants.length;
+    return `${code}: ${variants[idx]}`;
+  }
+  if (desc.trim() && !desc.endsWith(' 喵~')) {
+    return `${code}: ${desc} 喵~`;
+  }
+  return message;
+}
