@@ -7,6 +7,7 @@ const path = require('node:path');
 const {
   RULES,
   RULES_VERSION,
+  IDENTITY_VALUES,
   FALLBACK_SUFFIX,
   tokenize,
   transformValue,
@@ -139,6 +140,68 @@ test('patchContent: 非数组内容不炸', () => {
   assert.strictEqual(junk.changed, false);
 });
 
+test('IDENTITY_VALUES 已导出且与规则键不重叠', () => {
+  assert.ok(Array.isArray(IDENTITY_VALUES));
+  assert.ok(IDENTITY_VALUES.length > 100, `identity 唯一值应超过 100，实际 ${IDENTITY_VALUES.length}`);
+  const set = new Set(IDENTITY_VALUES);
+  for (const key of Object.keys(RULES)) {
+    assert.ok(!set.has(key), `identity 不应与规则键重叠: ${key}`);
+  }
+});
+
+test('transformValue: identity 片段一律保持原文（不注入喵~）', () => {
+  for (const v of ['变量', ' (已声明 ', '所在行数:', '行', '错误', '概念']) {
+    const r = transformValue(v, 0, on);
+    assert.strictEqual(r.value, v, JSON.stringify(v));
+    assert.strictEqual(r.kind, 'identity', JSON.stringify(v));
+  }
+});
+
+test('回归: 用户报告的组合消息不再出现中间 喵~ / 多余空格', () => {
+  // 片段边界按用户实测消息还原：runtime 片段（位置、"N"）不参与改写
+  const parts = [
+    transformValue('表达式必须含有常量值', 28, on).value,
+    'main.cpp(6, 13): ',
+    transformValue('变量', 1475, on).value,
+    ' "N"',
+    transformValue(' (已声明 ', 1488, on).value,
+    transformValue('所在行数:', 1458, on).value,
+    transformValue('%nd 的值不可用作常量', 2689, on).value.replace('%nd', '5)')
+  ];
+  const composed = parts.join('');
+  assert.ok(!composed.includes('喵~'), `片段被注入了喵~: ${composed}`);
+  assert.ok(!/ {2,}/.test(composed), `组合消息出现连续空格: ${JSON.stringify(composed)}`);
+  assert.strictEqual(
+    composed,
+    '这里的表达式必须含有常量值的啦，笨蛋main.cpp(6, 13): 变量 "N" (已声明 所在行数:5) 的值这么一搞，拿来当常量就彻底泡汤了，哼，都怪你嘛'
+  );
+});
+
+test('transformValue: 空串/纯空白不兜底装饰', () => {
+  assert.deepStrictEqual(transformValue('', 0, on), { value: '', kind: 'kept' });
+  assert.deepStrictEqual(transformValue('   ', 0, on), { value: '   ', kind: 'kept' });
+});
+
+test('transformValue: 基线全部 identity 条目保持原样', (t) => {
+  const p = path.join(BASELINE_DIR, 'orig-1.34.4.json');
+  const kPath = path.join(__dirname, '..', 'assets', 'reference', 'messages.json');
+  if (!fs.existsSync(p) || !fs.existsSync(kPath)) {
+    t.skip('缺少基线或参考文案');
+    return;
+  }
+  const o = JSON.parse(fs.readFileSync(p, 'utf8'));
+  const k = JSON.parse(fs.readFileSync(kPath, 'utf8'));
+  let n = 0;
+  for (let i = 0; i < o.length; i++) {
+    if (o[i] === null || o[i] !== k[i]) continue;
+    n++;
+    const r = transformValue(o[i], i, on);
+    assert.strictEqual(r.value, o[i], `idx ${i}: ${JSON.stringify(o[i])}`);
+    assert.strictEqual(r.kind, 'identity', `idx ${i}: ${JSON.stringify(o[i])}`);
+  }
+  assert.ok(n >= 160, `identity 条目数应 ≥160，实际 ${n}`);
+});
+
 test('formatStats 输出统计', () => {
   const s = patchContent('[]', on).stats;
   const text = formatStats(s);
@@ -181,7 +244,7 @@ test('覆盖率: 全量试跑 patchContent 对真实基线可用（1.35.3）', (
   assert.strictEqual(res.changed, true);
   assert.strictEqual(res.stats.nulls, arr.filter((x) => x === null).length);
   assert.strictEqual(res.stats.total, arr.length);
-  assert.ok(res.stats.hits + res.stats.decorated + res.stats.kept + res.stats.already === arr.length - res.stats.nulls);
+  assert.ok(res.stats.hits + res.stats.decorated + res.stats.identity + res.stats.kept + res.stats.already === arr.length - res.stats.nulls);
   // 解析回数组，长度必须不变
   const back = JSON.parse(res.content);
   assert.strictEqual(back.length, arr.length);

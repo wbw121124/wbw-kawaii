@@ -1,7 +1,7 @@
 // 纯文本改写核心：不依赖 vscode 模块，便于 node 直接单测。
-import { RULES, RULES_VERSION } from './rules.generated';
+import { RULES, RULES_VERSION, IDENTITY_VALUES } from './rules.generated';
 
-export { RULES, RULES_VERSION };
+export { RULES, RULES_VERSION, IDENTITY_VALUES };
 
 // 未命中条目的统一兜底装饰后缀（正则替换追加）
 export const FALLBACK_SUFFIX = ' 喵~';
@@ -10,7 +10,7 @@ export interface PatchOptions {
   decorateFallback: boolean;
 }
 
-export type EntryKind = 'null' | 'hit' | 'decorated' | 'kept' | 'already';
+export type EntryKind = 'null' | 'hit' | 'decorated' | 'kept' | 'already' | 'identity';
 
 export interface EntryResult {
   value: string | null;
@@ -22,6 +22,7 @@ export interface PatchStats {
   nulls: number;
   hits: number;
   decorated: number;
+  identity: number;
   kept: number;
   already: number;
   changed: number;
@@ -48,6 +49,10 @@ const CUTE_VALUES: Set<string> = (() => {
   return set;
 })();
 
+// 参考文案原样保留的原文（拼接片段/类型名/标签等）：运行时会被拼进完整消息，
+// 兜底后缀若加在这些条目上会注进消息中间，因此一律保持原样
+const IDENTITY: ReadonlySet<string> = new Set(IDENTITY_VALUES);
+
 function placeholderSeqEqual(a: string, b: string): boolean {
   const ta = tokenize(a);
   const tb = tokenize(b);
@@ -59,6 +64,8 @@ function placeholderSeqEqual(a: string, b: string): boolean {
 }
 
 export function transformValue(value: string, index: number, opts: PatchOptions): EntryResult {
+  // 参考保持：identity 条目（多为拼接片段）原样保留，绝不注入后缀
+  if (IDENTITY.has(value)) return { value, kind: 'identity' };
   // 幂等保护：已是可爱文案（规则产物）或已带兜底后缀的，不再动
   if (CUTE_VALUES.has(value)) return { value, kind: 'already' };
   if (value.endsWith(FALLBACK_SUFFIX)) return { value, kind: 'already' };
@@ -72,6 +79,8 @@ export function transformValue(value: string, index: number, opts: PatchOptions)
     // 占位符序列不一致（生成期已拦截，这里是运行时兜底）→ 落到兜底分支
   }
 
+  // 空串/纯空白是占位片段，装饰后会凭空多出内容
+  if (value.trim() === '') return { value, kind: 'kept' };
   if (opts.decorateFallback) {
     return { value: value.replace(/\s+$/u, '') + FALLBACK_SUFFIX, kind: 'decorated' };
   }
@@ -114,7 +123,7 @@ function transformLine(line: string, index: number, opts: PatchOptions): LineOut
 }
 
 function emptyStats(): PatchStats {
-  return { total: 0, nulls: 0, hits: 0, decorated: 0, kept: 0, already: 0, changed: 0 };
+  return { total: 0, nulls: 0, hits: 0, decorated: 0, identity: 0, kept: 0, already: 0, changed: 0 };
 }
 
 function accumulate(stats: PatchStats, kind: EntryKind): void {
@@ -123,6 +132,7 @@ function accumulate(stats: PatchStats, kind: EntryKind): void {
     case 'null': stats.nulls++; break;
     case 'hit': stats.hits++; break;
     case 'decorated': stats.decorated++; break;
+    case 'identity': stats.identity++; break;
     case 'kept': stats.kept++; break;
     case 'already': stats.already++; break;
   }
@@ -157,7 +167,7 @@ export function patchContent(content: string, opts: PatchOptions): PatchResult {
 export function formatStats(stats: PatchStats): string {
   return (
     `条目 ${stats.total}（null ${stats.nulls}）| 命中规则 ${stats.hits} | ` +
-    `兜底装饰 ${stats.decorated} | 保持原文 ${stats.kept} | 已是文案 ${stats.already} | ` +
-    `改写行 ${stats.changed}`
+    `兜底装饰 ${stats.decorated} | 参考保持 ${stats.identity} | 保持原文 ${stats.kept} | ` +
+    `已是文案 ${stats.already} | 改写行 ${stats.changed}`
   );
 }

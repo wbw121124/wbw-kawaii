@@ -133,7 +133,27 @@ export class KawaiiPatcher {
     const opts: PatchOptions = {
       decorateFallback: cfg.get<boolean>('fallbackDecorate', true)
     };
-    const res = patchContent(content, opts);
+
+    // 规则版本已变化：当前文件是旧规则的改写产物，直接改会被幂等保护挡住（新规则落不了地）。
+    // 备份校验通过时先取回原始文本再改写，保证修复对已改写过的用户生效。
+    let input = content;
+    let inputHash = hash;
+    if (meta && meta.state === 'patched' && meta.rulesVersion !== RULES_VERSION) {
+      if (fs.existsSync(backupPath)) {
+        const backup = fs.readFileSync(backupPath, 'utf8');
+        if (sha256(backup) === meta.originalHash) {
+          input = backup;
+          inputHash = meta.originalHash;
+          this.log(`规则版本变化（${meta.rulesVersion} → ${RULES_VERSION}），从备份取回原文后重新改写`);
+        } else {
+          this.log('警告: 备份与记录的原始哈希不一致，无法回退旧改写，按当前文件继续');
+        }
+      } else {
+        this.log('警告: 缺少备份 messages.json.orig，无法回退旧改写，按当前文件继续');
+      }
+    }
+
+    const res = patchContent(input, opts);
 
     if (!res.changed) {
       // 两种情形：文件已是改写产物（meta 丢失/规则版本变化）或规则零命中
@@ -142,23 +162,23 @@ export class KawaiiPatcher {
         rulesVersion: RULES_VERSION,
         cpptoolsVersion: version,
         locale: vscode.env.language,
-        originalHash: meta ? meta.originalHash : hash,
-        patchedHash: hash,
+        originalHash: meta ? meta.originalHash : inputHash,
+        patchedHash: inputHash,
         updatedAt: new Date().toISOString()
       });
       this.log(`无需改写（文件未变化）。${formatStats(res.stats)}`);
       return;
     }
 
-    // 此刻 content 是未被本次改写的输入：覆盖备份为“最近一次原始文件”
-    fs.writeFileSync(backupPath, content, 'utf8');
+    // 此刻 input 是未被本次改写的输入：覆盖备份为“最近一次原始文件”
+    fs.writeFileSync(backupPath, input, 'utf8');
     fs.writeFileSync(file, res.content, 'utf8');
     writeMeta(metaPath, {
       state: 'patched',
       rulesVersion: RULES_VERSION,
       cpptoolsVersion: version,
       locale: vscode.env.language,
-      originalHash: hash,
+      originalHash: inputHash,
       patchedHash: sha256(res.content),
       updatedAt: new Date().toISOString()
     });
