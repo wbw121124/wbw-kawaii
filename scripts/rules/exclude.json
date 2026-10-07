@@ -1,0 +1,17 @@
+[
+ {"scope":"pack","key":"@font-face","reason":"identifier-like","value":"@font-face"},
+ {"scope":"pack","key":"css.builtin.lab","reason":"identifier-like","value":"css.builtin.lab"},
+ {"scope":"ts","key":"Completeness_6257","reason":"identifier-like","value":"Completeness"},
+ {"scope":"ts","key":"DIRECTORY_6038","reason":"identifier-like","value":"DIRECTORY"},
+ {"scope":"ts","key":"Emit_6246","reason":"identifier-like","value":"Emit"},
+ {"scope":"ts","key":"file_6025","reason":"identifier-like","value":"file"},
+ {"scope":"ts","key":"FILE_6035","reason":"identifier-like","value":"FILE"},
+ {"scope":"ts","key":"KIND_6034","reason":"identifier-like","value":"KIND"},
+ {"scope":"ts","key":"LOCATION_6037","reason":"identifier-like","value":"LOCATION"},
+ {"scope":"ts","key":"Modules_6244","reason":"identifier-like","value":"Modules"},
+ {"scope":"ts","key":"NEWLINE_6061","reason":"identifier-like","value":"NEWLINE"},
+ {"scope":"ts","key":"options_6024","reason":"identifier-like","value":"options"},
+ {"scope":"ts","key":"Projects_6255","reason":"identifier-like","value":"Projects"},
+ {"scope":"ts","key":"STRATEGY_6039","reason":"identifier-like","value":"STRATEGY"},
+ {"scope":"ts","key":"VERSION_6036","reason":"identifier-like","value":"VERSION"}
+]

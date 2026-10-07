@@ -32,6 +32,17 @@ test('tokenize 识别全部占位符形态', () => {
   assert.deepStrictEqual(tokenize('没有占位符'), []);
 });
 
+test('tokenize 识别 {N} 占位符（TS/语言包）', () => {
+  assert.deepStrictEqual(
+    tokenize("类型“{0}”不能赋给类型“{1}”。还差 {10} 和 {2}"),
+    ['{0}', '{1}', '{10}', '{2}']
+  );
+  assert.deepStrictEqual(tokenize("未知 at 规则 {0}，但 %s 不算"), ['{0}', '%s']);
+  // 普通花括号不误伤
+  assert.deepStrictEqual(tokenize('if { x } then { y }'), []);
+  assert.deepStrictEqual(tokenize('100% 完成 {1}'), ['{1}']);
+});
+
 test('所有规则的占位符序列与文案一致', () => {
   let checked = 0;
   for (const [key, variants] of Object.entries(RULES)) {

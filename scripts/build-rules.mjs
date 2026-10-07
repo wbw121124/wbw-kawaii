@@ -19,8 +19,8 @@ const PRIMARY = '1.34.4';
 const SECONDARY = '1.19.7';
 const COVERAGE = ['1.34.4', '1.19.7', '1.35.3'];
 
-// 占位符形态：%% | %[方括号] | %字母族+数字下标（用 RegExp 构造器避免字面量转义歧义）
-const TOKEN_RE = new RegExp('%%|%\\[[^\\]]*\\]|%[A-Za-z]+\\d*', 'g');
+// 占位符形态：%% | %[方括号] | %字母族+数字下标 | {N}（与 src/transform.ts 保持一致）
+const TOKEN_RE = new RegExp('%%|%\\[[^\\]]*\\]|%[A-Za-z]+\\d*|\\{\\d+\\}', 'g');
 
 const tokens = (s) => s.match(TOKEN_RE) ?? [];
 const seqKey = (arr) => arr.join('\u0001');

@@ -34,8 +34,9 @@ export interface PatchResult {
   changed: boolean;
 }
 
-// 占位符形态：%% | %[方括号] | %字母族+数字下标（RegExp 构造器避免字面量转义歧义）
-const TOKEN_RE = new RegExp('%%|%\\[[^\\]]*\\]|%[A-Za-z]+\\d*', 'g');
+// 占位符形态：%% | %[方括号] | %字母族+数字下标 | {N}（TS/语言包）。
+// RegExp 构造器避免字面量转义歧义；cpptools 文案不含 {N}，扩展不改变其行为。
+const TOKEN_RE = new RegExp('%%|%\\[[^\\]]*\\]|%[A-Za-z]+\\d*|\\{\\d+\\}', 'g');
 
 export function tokenize(s: string): string[] {
   return s.match(TOKEN_RE) ?? [];

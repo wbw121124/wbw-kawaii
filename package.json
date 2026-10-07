@@ -65,6 +65,7 @@
   "scripts": {
     "fetch-baseline": "node scripts/fetch-baseline.mjs",
     "build:rules": "node scripts/build-rules.mjs",
+    "extract:inputs": "node scripts/extract-rule-inputs.mjs",
     "compile": "tsc -p ./",
     "watch": "tsc -w -p ./",
     "test": "tsc -p ./ && node --test test/transform.test.cjs test/uninstall-restore.test.cjs",
