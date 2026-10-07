@@ -3,133 +3,17 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as crypto from 'crypto';
 import { patchContent, formatStats, RULES_VERSION, PatchOptions } from './transform';
+import { patchTsDiag, patchJsonObject, patchPackBundle, patchBundleTemplate } from './transform-new';
 import {
   buildTargets, TargetDef, TargetMeta, readTargetMeta, writeTargetMeta,
   shouldPatchTarget
 } from './targets';
+import { buildManifest, readManifest, writeManifest, ManifestTarget } from './targets-manifest';
 
 export type RunReason = 'startup' | 'extensions-changed' | 'config-enabled' | 'manual';
 
 function sha256(data: string | Buffer): string {
   return crypto.createHash('sha256').update(data).digest('hex');
-}
-
-// TS diag 表补丁：正则匹配 diag(key, category, "messageKey", "English text") 行，
-// 将 English text 替换为可爱变体。保留原有注释和换行。
-function patchTsDiag(content: string, rules: Record<string, string[]>): { content: string; stats: { hits: number; decorated: number }; changed: boolean } {
-  // 模式：PropertyName: diag(2304, 1 /* Error */, "messageKey", "English text"),
-  // messageKey 与 PropertyName 可能不同，以 messageKey（3rd arg）为准查规则
-  const re = /([A-Za-z_$][\w$]*)\s*:\s*diag\(\s*\d+\s*,\s*[^,]+?,\s*"((?:[^"\\]|\\.)*)"\s*,\s*"((?:[^"\\]|\\.)*)"\s*\)/g;
-  let hits = 0, decorated = 0;
-  let result = content.replace(re, (match, propName, msgKey, enText) => {
-    const variants = rules[msgKey];
-    if (variants && variants.length > 0) {
-      // 轮换：基于 msgKey hash 选变体
-      const h = crypto.createHash('sha256').update(msgKey).digest();
-      const idx = (h.readUInt32BE(0) + 0) % variants.length;
-      const cute = variants[idx];
-      // 转义 JSON-like 字符串（反斜杠、引号）
-      const escaped = cute.replace(/\\/g, '\\\\').replace(/"/g, '\\"');
-      hits++;
-      // 提取原始 diag 调用的各段
-      const diagMatch = match.match(/^(\w+)\s*:\s*diag\(([\s\S]*?)$/);
-      const prefix = diagMatch ? diagMatch[1] : propName;
-      const argsPart = diagMatch ? diagMatch[2] : '';
-      return `${prefix}: diag(${argsPart}"${msgKey}","${escaped}")}`;
-    }
-    return match;
-  });
-  // 兜底：未命中的英文文本加后缀
-  result = result.replace(/"((?:[^"\\]|\\.)*[^"\\])"\s*\)/g, (m, text) => {
-    if (!text.includes('喵~') && text.length > 3) {
-      decorated++;
-      return `"${text} 喵~")`;
-    }
-    return m;
-  });
-  return { content: result, stats: { hits, decorated }, changed: result !== content };
-}
-
-// zh JSON 补丁（jsonObject）：逐行替换 value
-function patchJsonObject(content: string, rules: Record<string, string[]>): { content: string; stats: { hits: number; decorated: number }; changed: boolean } {
-  const lines = content.split(/(\r\n|\n|\r)/);
-  let hits = 0, decorated = 0;
-  let changed = false;
-  for (let i = 0; i < lines.length; i++) {
-    const line = lines[i];
-    if (i % 2 === 1) continue; // EOL
-    const m = line.match(/^\s*"((?:[^"\\]|\\.)*)"\s*:\s*"((?:[^"\\]|\\.)*)"\s*,?\s*$/);
-    if (!m) continue;
-    const key = m[1];
-    const val = m[2];
-    const variants = rules[key];
-    if (variants && variants.length > 0) {
-      const h = crypto.createHash('sha256').update(key).digest();
-      const idx = (h.readUInt32BE(0)) % variants.length;
-      const cute = variants[idx];
-      if (cute !== val) {
-        lines[i] = line.replace(/"(?:"[^"]*")*"/, `"${cute}"`);
-        hits++;
-        changed = true;
-      }
-    } else if (val.trim() && !val.endsWith(' 喵~')) {
-      // 兜底后缀
-      lines[i] = line.replace(/"((?:[^"\\]|\\.)*)"\s*$/, '"$1 喵~"');
-      decorated++;
-      changed = true;
-    }
-  }
-  return { content: lines.join(''), stats: { hits, decorated }, changed };
-}
-
-// packBundle 补丁（语言包 contents.bundle）：JSON.parse → transform values → stringify compact
-function patchPackBundle(content: string, rules: Record<string, string[]>): { content: string; stats: { hits: number; decorated: number }; changed: boolean } {
-  let obj: any;
-  try { obj = JSON.parse(content); } catch {
-    // 回退：行级正则
-    return patchJsonObject(content, rules);
-  }
-  const bundle = obj?.contents?.bundle;
-  if (!bundle || typeof bundle !== 'object') return { content, stats: { hits: 0, decorated: 0 }, changed: false };
-  let hits = 0, decorated = 0;
-  let changed = false;
-  for (const [key, val] of Object.entries(bundle)) {
-    if (typeof val !== 'string') continue;
-    const variants = rules[key];
-    if (variants && variants.length > 0) {
-      const h = crypto.createHash('sha256').update(key).digest();
-      const idx = (h.readUInt32BE(0)) % variants.length;
-      const cute = variants[idx];
-      if (cute !== val) {
-        bundle[key] = cute;
-        hits++;
-        changed = true;
-      }
-    } else if (val.trim() && !val.endsWith(' 喵~') && !val.endsWith('…') && !val.endsWith('~')) {
-      bundle[key] = val + ' 喵~';
-      decorated++;
-      changed = true;
-    }
-  }
-  if (!changed) return { content, stats: { hits: 0, decorated: 0 }, changed: false };
-  // 紧凑序列化（保留原始格式风格：单行）
-  const compact = JSON.stringify(obj);
-  if (compact === content) return { content, stats: { hits, decorated }, changed: false };
-  return { content: compact, stats: { hits, decorated }, changed: true };
-}
-
-// bundleTemplate 补丁：在 bundle 中找到并替换模板字面量
-function patchBundleTemplate(content: string, suffix: string): { content: string; stats: { hits: number; decorated: number }; changed: boolean } {
-  // 匹配 `Unknown at rule @${...}` 这类无 key 的模板诊断
-  const re = /`([^`]*?)\$\{[^}]+\}([^`]*)`/g;
-  let hits = 0;
-  const result = content.replace(re, (match, prefix, suffix_part) => {
-    const full = prefix + suffix_part;
-    if (full.includes('喵~')) return match; // 已打过
-    hits++;
-    return `\`${prefix}${suffix_part} ${suffix.trim()}\``;
-  });
-  return { content: result, stats: { hits, decorated: 0 }, changed: result !== content };
 }
 
 export class KawaiiPatcher {
@@ -295,6 +179,37 @@ export class KawaiiPatcher {
       });
       this.log(`[${t.id}] 改写完成。命中 ${res.stats.hits}，兜底 ${res.stats.decorated}`);
       totalRestored = 0; // 不打扰计数
+    }
+
+    // 写入 targets-manifest
+    try {
+      const manifestTargets: ManifestTarget[] = [];
+      for (const t of targets) {
+        if (t.id === 'cpptools') continue;
+        const meta = readTargetMeta(t.metaFile);
+        if (meta) {
+          manifestTargets.push({
+            id: t.id,
+            file: t.file,
+            backupFile: t.backupFile,
+            metaFile: t.metaFile,
+            state: meta.state,
+            sourceVersion: meta.sourceVersion
+          });
+        }
+      }
+      if (manifestTargets.length > 0) {
+        const extDir = path.resolve(__dirname, '..');
+        const existing = readManifest(extDir);
+        const merged = {
+          ...buildManifest(manifestTargets),
+          rulesVersion: RULES_VERSION
+        };
+        writeManifest(extDir, merged);
+        this.log(`已写入 targets-manifest.json（${manifestTargets.length} 条目标）`);
+      }
+    } catch (e) {
+      this.log(`[manifest] 写入失败: ${String(e)}`);
     }
 
     // 弹出重载提示

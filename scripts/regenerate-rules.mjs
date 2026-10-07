@@ -81,13 +81,19 @@ function generateVariants(baseText, idx) {
   for (let i = 0; i < 3; i++) {
     const a = (angle + i) % 6;
     let v = ANGLES[a](baseText);
-    // 强制校验：变体必须包含源文本所有占位符
+    // 强制校验：变体必须包含源文本所有占位符（仅当源有占位符时补救）
     const srcTok = sourceTokens(baseText);
     const varTok = variantTokens(v);
-    if (srcTok !== varTok) {
+    if (srcTok && srcTok !== varTok) {
       // 补救：把缺失的占位符加回去
       const missing = srcTok.split(',').filter(t => t && !varTok.includes(t));
       for (const tok of missing) v += ' (' + tok + ')';
+    }
+    // 额外校验：变体不能多出源没有的占位符
+    const extraTok = varTok.split(',').filter(t => t && !srcTok.includes(t));
+    if (extraTok.length > 0) {
+      // 去掉多余的占位符引用
+      for (const tok of extraTok) v = v.split(tok).join('');
     }
     // 清洗连续空格
     v = v.replace(/\s{2,}/g, ' ');

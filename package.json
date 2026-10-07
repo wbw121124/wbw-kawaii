@@ -68,7 +68,7 @@
     "extract:inputs": "node scripts/extract-rule-inputs.mjs",
     "compile": "tsc -p ./",
     "watch": "tsc -w -p ./",
-    "test": "tsc -p ./ && node --test test/transform.test.cjs test/uninstall-restore.test.cjs",
+    "test": "tsc -p ./ && node --test test/transform.test.cjs test/uninstall-restore.test.cjs test/new-targets.test.cjs",
     "package": "vsce package",
     "vscode:uninstall": "node ./out/uninstall-restore.js"
   },

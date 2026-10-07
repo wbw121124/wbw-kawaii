@@ -1,0 +1,121 @@
+'use strict';
+const test = require('node:test');
+const assert = require('node:assert');
+const fs = require('node:fs');
+const path = require('node:path');
+const os = require('node:os');
+
+// ========== token 测试（新增 {N}）==========
+test('tokenize 识别 {N} 占位符', () => {
+  const { tokenize } = require('../out/transform.js');
+  assert.deepStrictEqual(tokenize('{0} 和 {1}'), ['{0}', '{1}']);
+  assert.deepStrictEqual(tokenize('{10} 与 {2} 顺序不同'), ['{10}', '{2}']);
+  assert.deepStrictEqual(tokenize('无占位符'), []);
+  assert.deepStrictEqual(tokenize('100% {1}'), ['{1}']);
+});
+
+// ========== shouldPatchTarget 门控 ==========
+test('shouldPatchTarget: zh-cn 允许新目标，en 拒绝', () => {
+  const { shouldPatchTarget } = require('../out/targets.js');
+  assert.strictEqual(shouldPatchTarget('tsDiag', 'zh-cn'), true);
+  assert.strictEqual(shouldPatchTarget('tsDiag', 'en'), false);
+  assert.strictEqual(shouldPatchTarget('tsDiag', 'ja'), false);
+  assert.strictEqual(shouldPatchTarget('cpptools', 'en'), true);
+  assert.strictEqual(shouldPatchTarget('cpptools', 'zh-cn'), true);
+});
+
+// ========== patchJsonObject（纯模块无 vscode 依赖）==========
+test('patchJsonObject: 命中替换 + 兜底后缀 + 保持结构', () => {
+  const { patchJsonObject } = require('../out/transform-new.js');
+  const rules = { key_a: ['替代文案A', '替代文案B'] };
+  const content = '{\n  "key_a": "原文案",\n  "key_b": "无规则文案",\n  "key_c": null\n}\n';
+  const res = patchJsonObject(content, rules);
+  assert.strictEqual(res.changed, true);
+  assert.ok(res.content.includes('替代文案'), '应替换命中文案');
+  assert.ok(res.content.includes('无规则文案 喵~'), '应兜底追加后缀');
+  assert.ok(res.content.includes('null'), 'null 值应保留');
+  // 幂等
+  const res2 = patchJsonObject(res.content, rules);
+  assert.strictEqual(res2.changed, false, '二次改写不应变化');
+});
+
+// ========== patchPackBundle ==========
+test('patchPackBundle: 只动 contents.bundle，license/version 字节不动', () => {
+  const { patchPackBundle } = require('../out/transform-new.js');
+  const rules = { 'key_a': ['改版 A'] };
+  const content = '{"":"license","version":"1.0.0","contents":{"bundle":{"key_a":"原文","key_b":"无规则"}}}';
+  const res = patchPackBundle(content, rules);
+  assert.strictEqual(res.changed, true);
+  assert.ok(res.content.includes('"key_a":"改版 A"'), 'bundle 值应被替换');
+  assert.ok(res.content.includes('"version":"1.0.0"'), 'version 不应变化');
+  assert.ok(res.content.includes('"":"license"'), 'license 不应变化');
+  assert.ok(res.content.includes('key_b'), '无规则 key 也应被兜底');
+  // 幂等
+  const res2 = patchPackBundle(res.content, rules);
+  assert.strictEqual(res2.changed, false, '二次改写不应变化');
+});
+
+// ========== patchBundleTemplate ==========
+test('patchBundleTemplate: 模板串加后缀，已打过则跳过', () => {
+  const { patchBundleTemplate } = require('../out/transform-new.js');
+  const content = 'l10n.t("other") + `Unknown at rule @${name}`;';
+  const res = patchBundleTemplate(content, ' 喵~');
+  assert.strictEqual(res.changed, true);
+  assert.ok(res.content.includes('Unknown at rule @${name} 喵~'), '应追加后缀');
+  // 幂等
+  const res2 = patchBundleTemplate(res.content, ' 喵~');
+  assert.strictEqual(res2.changed, false, '二次改写不应变化');
+});
+
+// ========== locale 门控 + restore 流程 ==========
+test('locale 门控: en 下已 patched 的文件会被还原并记 inactive', async () => {
+  const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'wbw-locale-'));
+  try {
+    const tsDir = path.join(tmpDir, 'typescript', 'lib');
+    fs.mkdirSync(tsDir, { recursive: true });
+    const zhDir = path.join(tsDir, 'zh-cn');
+    fs.mkdirSync(zhDir, { recursive: true });
+    const original = '{\n  "Cannot_find_name_0_2304": "找不到名称\\"{0}\\"。"\n}\n';
+    const patched = '{\n  "Cannot_find_name_0_2304": "找不到名称\\"{0}\\"啦，喵~"\n}\n';
+    fs.writeFileSync(path.join(tsDir, 'typescript.js'), 'dummy');
+    fs.writeFileSync(path.join(tsDir, 'typescript.js.orig'), 'dummy');
+    fs.writeFileSync(path.join(zhDir, 'diagnosticMessages.generated.json'), patched);
+    fs.writeFileSync(path.join(zhDir, 'diagnosticMessages.generated.json.orig'), original);
+    fs.writeFileSync(path.join(zhDir, 'diagnosticMessages.generated.json.wbw-kawaii.json'),
+      JSON.stringify({ state: 'patched', rulesVersion: 'sha256:aaaaaaaaaaaaaaaa', sourceVersion: '6.0.3', locale: 'zh-cn', originalHash: 'x', patchedHash: 'y', updatedAt: new Date().toISOString() }));
+
+    const { readTargetMeta } = require('../out/targets.js');
+    const meta = readTargetMeta(path.join(zhDir, 'diagnosticMessages.generated.json.wbw-kawaii.json'));
+    assert.strictEqual(meta?.state, 'patched', '初始状态应为 patched');
+  } finally {
+    fs.rmSync(tmpDir, { recursive: true, force: true });
+  }
+});
+
+// ========== 覆盖率：TS/PACK 变体占位符一致性（比源文本，非比 key）==========
+test('TS_RULES 所有变体占位符与源文本一致', () => {
+  const { TS_RULES } = require('../out/rules.generated.js');
+  const tsInv = JSON.parse(fs.readFileSync('scripts/rules/inventory/ts.json', 'utf8'));
+  const invMap = new Map(tsInv.map(e => [e.key, e.zh || e.en]));
+  const TOKEN_RE = /\{\d+\}/g;
+  for (const [key, variants] of Object.entries(TS_RULES)) {
+    const sourceText = invMap.get(key) ?? key;
+    const srcTok = (sourceText.match(TOKEN_RE) ?? []).sort().join(',');
+    for (const v of variants) {
+      const vTok = (v.match(TOKEN_RE) ?? []).sort().join(',');
+      assert.strictEqual(srcTok, vTok, `占位符不一致: ${key}（源=${JSON.stringify(sourceText)?.slice(0,60)}）`);
+    }
+  }
+});
+
+test('PACK_RULES 所有变体占位符与键（即英文原文）一致', () => {
+  const { PACK_RULES } = require('../out/rules.generated.js');
+  const TOKEN_RE = /\{\d+\}/g;
+  for (const [key, variants] of Object.entries(PACK_RULES)) {
+    const srcTok = (key.match(TOKEN_RE) ?? []).sort().join(',');
+    for (const v of variants) {
+      const vTok = (v.match(TOKEN_RE) ?? []).sort().join(',');
+      assert.strictEqual(srcTok, vTok, `占位符不一致: ${key}`);
+    }
+  }
+});
