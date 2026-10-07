@@ -1,0 +1,9 @@
+[
+  {
+    "key": "test",
+    "variants": [
+      "hello",
+      "world"
+    ]
+  }
+]

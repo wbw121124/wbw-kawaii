@@ -1,0 +1,702 @@
+[
+  {
+    "key": "An_interface_can_only_extend_an_identifier_Slashqualified_name_with_optional_type_arguments_2499",
+    "variants": [
+      "接口不是想扩谁就扩谁的，得是标识符或限定名，还要有可选类型参数才行呢",
+      "啧，接口扩展的对象要是名字起得对，还要带点可选类型参数，别搞错了啦"
+    ]
+  },
+  {
+    "key": "An_interface_can_only_extend_an_object_type_or_intersection_of_object_types_with_statically_known_me_2312",
+    "variants": [
+      "接口只能拥抱那些成员清清楚楚的对象类型，或者多个对象类型叠在一起的交集，别的都不行",
+      "喂，接口扩展的东西得是能静态看清成员的，要么是对象类型要么是它们的交叉类型，别乱来"
+    ]
+  },
+  {
+    "key": "An_interface_cannot_extend_a_primitive_type_like_0_It_can_only_extend_other_named_object_types_2840",
+    "variants": [
+      "基元类型？比如\"{0}\"这种，接口可不会碰的。它只认命名对象类型哦",
+      "哼，\"{0}\"这种基础类型接口不继承！接口只能扩展其他有名字的 object type～"
+    ]
+  },
+  {
+    "key": "An_interface_property_cannot_have_an_initializer_1246",
+    "variants": [
+      "接口的属性不能自己带初始值呀，那是 class 的活儿～",
+      "欸？接口里写初始化表达式？不行不行，接口只管声明不管赋值哟"
+    ]
+  },
+  {
+    "key": "An_iterator_must_have_a_next_method_2489",
+    "variants": [
+      "迭代器可不是随便什么对象都能当的，必须有个 next() 方法才行呢",
+      "想要当迭代器？先看看有没有 next 方法啦，没有的话可不行哦"
+    ]
+  },
+  {
+    "key": "An_jsxFrag_pragma_is_required_when_using_an_jsx_pragma_with_JSX_fragments_17017",
+    "variants": [
+      "用了 @jsx 杂注还想用 JSX 片段？那 @jsxFrag 也得一起带上才行呀",
+      "诶嘿，@jsx 和 JSX Fragment 要搭配使用的话，@jsxFrag 杂注可不能少咯～"
+    ]
+  },
+  {
+    "key": "An_object_literal_cannot_have_multiple_get_Slashset_accessors_with_the_same_name_1118",
+    "variants": [
+      "一个对象里怎么能有两个同名 get/set 访问器呢？编译器都懵了，快删一个吧～",
+      "嘿，同一个名字搞两个访问器？对象字面量可不干这事，换个别名吧笨蛋"
+    ]
+  },
+  {
+    "key": "An_object_literal_cannot_have_multiple_properties_with_the_same_name_1117",
+    "variants": [
+      "对象字面量里怎么能有重复的属性名呢？后面的会覆盖前面的，不如直接删掉重复的～",
+      "咦～属性名居然重了？对象字面量不允许这样哦，检查一下删掉重复的吧"
+    ]
+  },
+  {
+    "key": "An_object_literal_cannot_have_property_and_accessor_with_the_same_name_1119",
+    "variants": [
+      "同一个名字既当属性又当访问器？对象字面量拒绝这种行为，快改成不同的名字吧～",
+      "啊啦，属性跟访问器不能用同一个名字啦，编译器会伤心的，改掉吧"
+    ]
+  },
+  {
+    "key": "An_object_member_cannot_be_declared_optional_1162",
+    "variants": [
+      "对象成员可不能标成 optional 哦，那是接口和类型别名才能做的事～",
+      "咦～对象里的成员想搞可选？没门没门，只有 interface 和 type 才可以呢"
+    ]
+  },
+  {
+    "key": "An_object_s_Symbol_hasInstance_method_must_return_a_boolean_value_for_it_to_be_used_on_the_right_han_2861",
+    "variants": [
+      "要让 [Symbol.hasInstance] 在 instanceof 右侧正常工作，它必须返回布尔值才行呀",
+      "话说 instance 检查的时候，那个 Symbol.hasInstance 方法得吐出 true 或 false 哦，别返回奇奇怪怪的东西"
+    ]
+  },
+  {
+    "key": "An_optional_chain_cannot_contain_private_identifiers_18030",
+    "variants": [
+      "可选链里塞私有的东西？编译器说这不合规矩呢",
+      "啧，可选链（?.）和私有标识符（#foo）不能混用，分开用吧～"
+    ]
+  },
+  {
+    "key": "An_optional_element_cannot_follow_a_rest_element_1266",
+    "variants": [
+      "rest 元素后面再跟可选元素？数组解构不会允许的，快调整一下顺序吧",
+      "喂，rest 展开后面不能再接可选项啦，语法规定就是不行，改一改咯"
+    ]
+  },
+  {
+    "key": "An_outer_value_of_this_is_shadowed_by_this_container_2738",
+    "variants": [
+      "容器把外层的 this 给盖住啦，是不是用了箭头函数之外的函数？检查一下作用域吧",
+      "啊，这个 this 被内层函数抢走咯～外层 this 没法见了，换成箭头函数试试？"
+    ]
+  },
+  {
+    "key": "An_overload_signature_cannot_be_declared_as_a_generator_1222",
+    "variants": [
+      "重载签名要是生成器那就乱套了，TypeScript 不允许这样做哦",
+      "喂喂，函数重载和生成器不能同时拥有，选一个吧～重载签名不能是 generator 哒"
+    ]
+  },
+  {
+    "key": "An_unary_expression_with_the_0_operator_is_not_allowed_in_the_left_hand_side_of_an_exponentiation_ex_17006",
+    "variants": [
+      "乘方表达式左侧出现 \"{0}\" 一元运算符？请用括号把它们包起来哦",
+      "哼，乘方左边搞 \"{0}\" 运算符？括号加上嘛，不然优先级会打架的～"
+    ]
+  },
+  {
+    "key": "and_here_6204",
+    "variants": [
+      "还有这里也出了问题呢",
+      "啊，这边也要检查一下哦"
+    ]
+  },
+  {
+    "key": "and_npm_install_D_types_Slashnode_6290",
+    "variants": [
+      "顺便说一句，用 npm install -D @types/node 装上 Node 类型定义吧～",
+      "对了，记得装一下 @types/node：npm install -D @types/node 哦"
+    ]
+  },
+  {
+    "key": "Annotate_everything_with_types_from_JSDoc_95043",
+    "variants": [
+      "要不要试着用 JSDoc 里的类型给所有东西加上注解呢？",
+      "话说把所有东西都用 JSDoc 类型标注一下，说不定能解决问题哦～"
+    ]
+  },
+  {
+    "key": "Annotate_types_of_properties_expando_function_in_a_namespace_90071",
+    "variants": [
+      "命名空间里的 expando 函数属性，记得给它加上类型注解呀",
+      "对咯，命名空间中那个 expando 函数属性的类型别忘了标注～"
+    ]
+  },
+  {
+    "key": "Annotate_with_type_from_JSDoc_95009",
+    "variants": [
+      "用 JSDoc 的类型来做批注吧，这样更清晰呢～",
+      "咦，尝试从 JSDoc 里拿类型来做注解，会更方便的"
+    ]
+  },
+  {
+    "key": "Another_export_default_is_here_2753",
+    "variants": [
+      "这里居然又有一个默认导出！一个文件只能有一个哦，快去掉多余的～",
+      "呀，重复的默认导出被发现啦，一个文件只能 export default 一次，删掉多余的那个吧"
+    ]
+  },
+  {
+    "key": "Any_Unicode_property_that_would_possibly_match_more_than_a_single_character_is_only_available_when_t_1528",
+    "variants": [
+      "能匹配多个字符的 Unicode 属性，只有在加了 (v) 标志时才可以用呢～",
+      "欸，匹配多个字符的 Unicode 属性需要 v 标志才能用，加上 /v 试试看？"
+    ]
+  },
+  {
+    "key": "Anything_that_would_possibly_match_more_than_a_single_character_is_invalid_inside_a_negated_characte_1518",
+    "variants": [
+      "负向字符类里不能放能匹配多个字符的东西，乖乖改一下吧～",
+      "哼，否定字符类里塞多字符匹配？不行不行，换种写法吧"
+    ]
+  },
+  {
+    "key": "Are_you_missing_a_semicolon_2734",
+    "variants": [
+      "是不是漏了分号呀？检查一下行末",
+      "咦，这行末尾的分号跑哪里去了？加上吧～"
+    ]
+  },
+  {
+    "key": "Argument_expression_expected_1135",
+    "variants": [
+      "这里应该放一个参数表达式哦，检查一下吧",
+      "是不是参数表达式忘写了？编译器在等你填呢～"
+    ]
+  },
+  {
+    "key": "Argument_for_0_option_must_be_Colon_1_6046",
+    "variants": [
+      "\"{0}\" 选项的参数得是 {1} 才行呀，别填错咯",
+      "啧，\"{0}\" 这个选项就要 {1} 这种格式，快改成对的吧"
+    ]
+  },
+  {
+    "key": "Argument_of_dynamic_import_cannot_be_spread_element_1325",
+    "variants": [
+      "动态 import 的参数不能用展开语法哦，直接传个字符串或表达式吧～",
+      "喂，import() 里面不能撒东西（spread），老老实实传表达式啦"
+    ]
+  },
+  {
+    "key": "Argument_of_type_0_is_not_assignable_to_parameter_of_type_1_2345",
+    "variants": [
+      "传给参数的 \"{0}\" 类型跟期望的 \"{1}\" 对不上呀，调整一下类型吧～",
+      "类型不匹配咯，参数要的是 \"{1}\" 但你塞了 \"{0}\"，换一下吧"
+    ]
+  },
+  {
+    "key": "Argument_of_type_0_is_not_assignable_to_parameter_of_type_1_with_exactOptionalPropertyTypes_Colon_tr_2379",
+    "variants": [
+      "在 exactOptionalPropertyTypes 模式下，\"{0}\" 不能塞进 \"{1}\" 类型参数里哦，试试给目标属性加上 | undefined？",
+      "哼，开严格可选类型检查时，\"{0}\" 给不了 \"{1}\" 的参数～把 undefined 加进去吧"
+    ]
+  },
+  {
+    "key": "arguments_cannot_be_referenced_in_property_initializers_or_class_static_initialization_blocks_2815",
+    "variants": [
+      "属性初始值或静态初始化块里不能引用 arguments 哦，换个方式传参吧～",
+      "喂，arguments 在那些地方没法用呢，改成显式传参比较好哦"
+    ]
+  },
+  {
+    "key": "Arguments_for_the_rest_parameter_0_were_not_provided_6236",
+    "variants": [
+      "rest 形参 \"{0}\" 没有收到任何实参哦，调用时补上吧",
+      "咦，\"{0}\" 这个 rest 参数空着手呢，调用的时候记得传点东西呀"
+    ]
+  },
+  {
+    "key": "Array_element_destructuring_pattern_expected_1181",
+    "variants": [
+      "数组解构这里应该写模式，不是随便什么东西都可以哦",
+      "数组解构的位置要放正确的模式，别塞奇怪的东西进来～"
+    ]
+  },
+  {
+    "key": "Arrays_with_spread_elements_can_t_inferred_with_isolatedDeclarations_9018",
+    "variants": [
+      "用 --isolatedDeclarations 时，含展开元素的数组没法自动推断类型，得手动标注哦～",
+      "啧，isolated 模式下数组展开推断不了，自己写上类型吧"
+    ]
+  },
+  {
+    "key": "Assertions_require_every_name_in_the_call_target_to_be_declared_with_an_explicit_type_annotation_2775",
+    "variants": [
+      "类型断言要求调用目标里的每个名字都得有显式类型注解，一个都不能少哦",
+      "断言的时候，调用目标里的每个标识符都得标好类型，快补上吧～"
+    ]
+  },
+  {
+    "key": "Assertions_require_the_call_target_to_be_an_identifier_or_qualified_name_2776",
+    "variants": [
+      "类型断言的调用目标只能是标识符或限定名，别放复杂表达式啦",
+      "喂，断言目标不能是花里胡哨的表达式，必须是简单的名字或限定名哦"
+    ]
+  },
+  {
+    "key": "Assigning_properties_to_functions_without_declaring_them_Is_Not_supported_with_isolatedDeclarations__9023",
+    "variants": [
+      "--isolatedDeclarations 模式下不允许往函数上乱挂属性，先把属性声明好再赋值～",
+      "哼，isolated 模式不允许函数挂未声明的属性，乖乖先声明吧"
+    ]
+  },
+  {
+    "key": "Asterisk_Slash_expected_1010",
+    "variants": [
+      "注释忘了关？应该用 */ 来结束呢",
+      "注释还没结束呀，*/ 在哪里？快加上吧～"
+    ]
+  },
+  {
+    "key": "At_least_one_accessor_must_have_an_explicit_type_annotation_with_isolatedDeclarations_9009",
+    "variants": [
+      "开了 --isolatedDeclarations 之后，至少得有一个访问器有显式类型注解才行哦",
+      "isolated 模式要求至少一个 getter/setter 有类型标注，别偷懒啦～"
+    ]
+  },
+  {
+    "key": "Augmentations_for_the_global_scope_can_only_be_directly_nested_in_external_modules_or_ambient_module_2669",
+    "variants": [
+      "全局范围的扩展只能在外部模块或 ambient 模块声明中直接嵌套使用哦～",
+      "话说 global augment 不能随便放，得在外部模块或 declare module 里才行呢"
+    ]
+  },
+  {
+    "key": "Augmentations_for_the_global_scope_should_have_declare_modifier_unless_they_appear_in_already_ambien_2670",
+    "variants": [
+      "全局增强应该加 declare 修饰符，除非它已经在 ambient 环境里了哦～",
+      "global 增强要加 declare 才行，除非它已经在 ambient 上下文中了～"
+    ]
+  },
+  {
+    "key": "auto_Colon_Treat_files_with_imports_exports_import_meta_jsx_with_jsx_Colon_react_jsx_or_esm_format_w_1476",
+    "variants": [
+      "\"auto\" 模式会把有 import/export/import.meta/JSX/esm 格式的文件都当成模块处理哦～",
+      "设置 auto 后，有模块语法的文件就自动被识别为模块啦，不用操心～"
+    ]
+  },
+  {
+    "key": "Auto_discovery_for_typings_Is_enabled_in_project_0_Running_extra_resolution_pass_for_module_1_using__6140",
+    "variants": [
+      "项目 \"{0}\" 里开了类型自动发现，正在用缓存 \"{2}\" 对模块 \"{1}\" 做额外解析呢",
+      "项目 \"{0}\" 启用了 typings 自动发现～模块 \"{1}\" 正在缓存路径 \"{2}\" 下做额外解析"
+    ]
+  },
+  {
+    "key": "await_expression_cannot_be_used_inside_a_class_static_block_18037",
+    "variants": [
+      "class 的静态块里不能用 await 哦，那不是异步的上下文～",
+      "咦，静态初始化块不是 async 的，await 放那里会报错的啦～"
+    ]
+  },
+  {
+    "key": "await_expressions_are_only_allowed_at_the_top_level_of_a_file_when_that_file_is_a_module_but_this_fi_1375",
+    "variants": [
+      "文件顶层用 await 得是模块才行，但这个文件没有 import/export，加个 export {} 变模块吧～",
+      "啊，顶层 await 只在模块里允许。这个文件没有导入导出，加个 export {} 就好了"
+    ]
+  },
+  {
+    "key": "await_expressions_are_only_allowed_within_async_functions_and_at_the_top_levels_of_modules_1308",
+    "variants": [
+      "await 只能在 async 函数里或者模块顶层用哦，其他地方不行～",
+      "咦～await 的合法场所只有 async 函数内部和模块顶级，别放错地方啦"
+    ]
+  },
+  {
+    "key": "await_expressions_cannot_be_used_in_a_parameter_initializer_2524",
+    "variants": [
+      "参数初始化表达式里不能用 await 哦，那不是异步上下文～",
+      "喂，函数参数默认值里不能等 await，换成普通表达式吧"
+    ]
+  },
+  {
+    "key": "await_has_no_effect_on_the_type_of_this_expression_80007",
+    "variants": [
+      "给这个表达式加 await 对类型没啥影响，去掉可能更简洁哦",
+      "等等，这个表达式加不加 await 类型都一样，没必要加吧～"
+    ]
+  },
+  {
+    "key": "await_using_declarations_are_not_allowed_in_ambient_contexts_1546",
+    "variants": [
+      "ambient 环境下不能使用 await using 声明哦，它们需要真正的运行时支持～",
+      "咦～declare 环境里不能写 await using，得在实际代码里才行"
+    ]
+  },
+  {
+    "key": "await_using_declarations_are_not_allowed_in_case_or_default_clauses_unless_contained_within_a_block_1548",
+    "variants": [
+      "case/default 子句里用 await using 必须用大括号包起来，不然不行哦",
+      "啊，switch 里写 await using 要用 {} 包起来，不然编译不过的～"
+    ]
+  },
+  {
+    "key": "await_using_statements_are_only_allowed_at_the_top_level_of_a_file_when_that_file_is_a_module_but_th_2853",
+    "variants": [
+      "文件顶层用 await using 语句需要它是模块，这个文件没有导入导出，加个 export {} 变模块吧～",
+      "等等，顶层 await using 只在模块里允许，这个文件缺 import/export，加个 export {} 吧～"
+    ]
+  },
+  {
+    "key": "await_using_statements_are_only_allowed_within_async_functions_and_at_the_top_levels_of_modules_2852",
+    "variants": [
+      "await using 语句只允许在 async 函数内和模块顶层使用哦～",
+      "啊啦，await using 的合法位置只有 async 函数里和模块顶级，别放错咯"
+    ]
+  },
+  {
+    "key": "await_using_statements_cannot_be_used_inside_a_class_static_block_18054",
+    "variants": [
+      "class 静态块里不能用 await using 语句哦，上下文不对～",
+      "咦，静态初始化块不是异步的，await using 放那里不合适呢"
+    ]
+  },
+  {
+    "key": "Backwards_Compatibility_6253",
+    "variants": [
+      "兼容性方面的考虑呢",
+      "说的是向后兼容的问题～"
+    ]
+  },
+  {
+    "key": "Base_class_expressions_cannot_reference_class_type_parameters_2562",
+    "variants": [
+      "基类表达式没法引用类自身的类型参数哦，换个思路吧～",
+      "哎呀，extends 那里的表达式不能用类的类型参数，得换个写法呢"
+    ]
+  },
+  {
+    "key": "Base_constructor_return_type_0_Is_not_an_object_type_or_intersection_of_object_types_with_statically_2509",
+    "variants": [
+      "基类构造函数的返回类型 \"{0}\" 得是对象类型或静态成员的交叉类型才行哦",
+      "啧，构造函数返回的 \"{0}\" 不是对象类型呢，没法作为基类～"
+    ]
+  },
+  {
+    "key": "Base_constructors_must_all_have_the_same_return_type_2510",
+    "variants": [
+      "所有基类构造函数的返回类型得一致才行，现在对不上呢",
+      "喂，几个构造函数返回类型不一样，编译器会懵的，统一一下吧～"
+    ]
+  },
+  {
+    "key": "Base_directory_to_resolve_non_absolute_module_names_6083",
+    "variants": [
+      "用来解析非绝对模块名的基础目录是哪个呀？检查一下 baseUrl 设置～",
+      "嗯…非相对模块名要找 Base 目录来定位，确认一下配置吧～"
+    ]
+  },
+  {
+    "key": "baseUrl_option_Is_set_to_0_using_this_value_to_resolve_non_relative_module_name_1_6106",
+    "variants": [
+      "baseUrl 设成了 \"{0}\"，正用它来解析非相对模块名 \"{1}\" 哦～",
+      "嘿，baseUrl 是 \"{0}\"，所以模块 \"{1}\" 就靠它来找啦"
+    ]
+  },
+  {
+    "key": "BigInt_literals_are_not_available_when_targeting_lower_than_ES2020_2737",
+    "variants": [
+      "目标版本低于 ES2020 的话，BigInt 字面量不可用，升级 target 或者改用 BigInt() 构造函数吧～",
+      "咦，ES2020 以下不支持 BigInt 字面量，把 target 提上去或者用 BigInt(123n) 的写法试试？"
+    ]
+  },
+  {
+    "key": "Binary_digit_expected_1177",
+    "variants": [
+      "二进制字面量里只能出现 0 和 1，这里有非法字符哦～",
+      "喂，0b 后面只能写 0 或 1，别塞奇怪数字进来啦"
+    ]
+  },
+  {
+    "key": "Binding_element_0_implicitly_has_an_1_type_7031",
+    "variants": [
+      "解构绑定元素 \"{0}\" 没写类型，隐式成了 \"{1}\"，显式标注一下吧～",
+      "咦，\"{0}\" 这参数没标类型，偷偷变成了 \"{1}\"，补上类型注解比较好～"
+    ]
+  },
+  {
+    "key": "Binding_elements_can_t_be_exported_directly_with_isolatedDeclarations_9019",
+    "variants": [
+      "isolatedDeclarations 模式下，解构绑定元素不能直接导出，得先声明再导出哦～",
+      "喂，isolated 模式下不能直接 export 解构出来的变量，先声明再导出吧～"
+    ]
+  },
+  {
+    "key": "Block_scoped_variable_0_used_before_its_declaration_2448",
+    "variants": [
+      "块级变量 \"{0}\" 在它声明之前就用了，变量提升不管 let/const 哦～",
+      "咦，\"{0}\" 还没声明就用啦？let/const 没有提升，把声明往前放吧～"
+    ]
+  },
+  {
+    "key": "Build_a_composite_project_in_the_working_directory_6925",
+    "variants": [
+      "在工作目录下构建复合项目，顺便产出 .d.ts 文件哦～",
+      "对咯，tsc -b 会在当前目录把各个子项目按顺序构建起来～"
+    ]
+  },
+  {
+    "key": "Build_all_projects_including_those_that_appear_to_be_up_to_date_6636",
+    "variants": [
+      "强制重新构建所有项目，包括看起来已经是最新的那些，用 --force 参数～",
+      "话说想全部重build就加 --force，不管时间戳啦～"
+    ]
+  },
+  {
+    "key": "Build_one_or_more_projects_and_their_dependencies_if_out_of_date_6364",
+    "variants": [
+      "只构建过期的项目及其依赖项，未变更的会跳过，省时间哦～",
+      "欸，增量构建只会重建比依赖旧的项目，剩下的直接跳过～"
+    ]
+  },
+  {
+    "key": "Build_option_0_requires_a_value_of_type_1_5073",
+    "variants": [
+      "编译选项 \"{0}\" 需要类型为 {1} 的值，填错了类型哦～",
+      "喂，\"{0}\" 这个选项要求 {1} 类型，你给的格式不对呢"
+    ]
+  },
+  {
+    "key": "BUILD_OPTIONS_6919",
+    "variants": [
+      "构建相关选项一览～",
+      "编译选项的说明来啦～"
+    ]
+  },
+  {
+    "key": "Building_project_0_6358",
+    "variants": [
+      "正在构建项目 \"{0}\" 中，请稍等～",
+      "项目 \"{0}\" 开始编译啦，看着进度条就好～"
+    ]
+  },
+  {
+    "key": "Built_in_iterators_are_instantiated_with_a_TReturn_type_of_undefined_instead_of_any_6720",
+    "variants": [
+      "内置迭代器的 TReturn 类型现在是 undefined 而不是 any，行为有变化，检查一下你的代码哦～",
+      "啊，内置迭代器的返回值类型变了，现在是 undefined 不是 any，注意适配～"
+    ]
+  },
+  {
+    "key": "c_must_be_followed_by_an_ASCII_letter_1512",
+    "variants": [
+      "转义序列 \\c 后面必须跟 ASCII 字母，不然不认识哦～",
+      "喂，\\c 后面要跟个字母才行，不然编译不通过呢"
+    ]
+  },
+  {
+    "key": "Call_decorator_expression_90028",
+    "variants": [
+      "调用修饰器表达式的地方出问题了，检查一下～",
+      "这里的装饰器表达式调用出了状况，看看对不对～"
+    ]
+  },
+  {
+    "key": "Call_signature_return_types_0_and_1_are_incompatible_2202",
+    "variants": [
+      "两个调用签名的返回类型 \"{0}\" 和 \"{1}\" 对不上，没法兼容呢～",
+      "咦，调用签名返回类型冲突了：一个是 \"{0}\"，另一个是 \"{1}\"，要统一哦"
+    ]
+  },
+  {
+    "key": "Call_signature_which_lacks_return_type_annotation_implicitly_has_an_any_return_type_7020",
+    "variants": [
+      "缺少返回类型标注的调用签名会被当成 any 返回类型，显式写出来比较好哦～",
+      "话说没有 return type 注解的调用签名隐式是 any，建议手动标注一下～"
+    ]
+  },
+  {
+    "key": "Call_signatures_with_no_arguments_have_incompatible_return_types_0_and_1_2204",
+    "variants": [
+      "两个无参调用签名的返回类型 \"{0}\" 和 \"{1}\" 不兼容，选一个吧～",
+      "咦，同样没参数但返回类型不一样？\"{0}\" 和 \"{1}\" 得统一才行呢"
+    ]
+  },
+  {
+    "key": "Call_target_does_not_contain_any_signatures_2346",
+    "variants": [
+      "调用目标根本没有可用的签名，它不是一个可调用对象哦～",
+      "喂，这个东西没法调用，里面没有签名定义，检查一下类型吧"
+    ]
+  },
+  {
+    "key": "can_only_be_used_at_the_start_of_a_file_18026",
+    "variants": [
+      "\"#!\" shebang 只能出现在文件的最开头，别放在中间哦",
+      "话说 shebang（#!/bin/...）得在文件第一行，别放到后面去～"
+    ]
+  },
+  {
+    "key": "Can_only_convert_logical_AND_access_chains_95142",
+    "variants": [
+      "只能转换逻辑 AND 链式的属性访问，不支持其他组合方式哦",
+      "嗯，这种链式 && 访问才能自动转换，别的方式不行的～"
+    ]
+  },
+  {
+    "key": "Can_only_convert_named_export_95164",
+    "variants": [
+      "只转换具名导出的情况，default export 不在处理范围内哦",
+      "话说只能处理 named export，default 那边不管的～"
+    ]
+  },
+  {
+    "key": "Can_only_convert_property_with_modifier_95137",
+    "variants": [
+      "只有带修饰符的属性才能被转换，普通的属性不行哦",
+      "喂，得有 private/public/protected 之类的修饰符才能被转，其他的忽略～"
+    ]
+  },
+  {
+    "key": "Can_only_convert_string_concatenations_and_string_literals_95154",
+    "variants": [
+      "只能转换字符串拼接和字面量，变量或表达式不行哦～",
+      "只认得字符串拼接和字面量，其他类型暂不处理呢～"
+    ]
+  },
+  {
+    "key": "Cannot_access_0_1_because_0_is_a_type_but_not_a_namespace_Did_you_mean_to_retrieve_the_type_of_the_p_2713",
+    "variants": [
+      "\"{0}.{1}\" 访问不到，因为 \"{0}\" 是类型不是命名空间哦。如果要取属性类型，试试 \"{0}[\\\"{1}\\\"]\" 写法～",
+      "咦，\"{0}\" 只是个类型，没法用点号访问成员。试试 \"{0}[\"{1}\"]\" 来获取属性类型吧～"
+    ]
+  },
+  {
+    "key": "Cannot_access_0_from_another_file_without_qualification_when_1_Is_enabled_Use_2_instead_1281",
+    "variants": [
+      "启用 \"{1}\" 时，从其他文件访问 \"{0}\" 必须用完全限定名，建议改用 \"{2}\"～",
+      "话说开了 \"{1}\" 之后，跨文件访问 \"{0}\" 得写全路径，换成 \"{2}\" 吧"
+    ]
+  },
+  {
+    "key": "Cannot_access_ambient_const_enums_when_0_Is_enabled_2748",
+    "variants": [
+      "启用 \"{0}\" 时没法访问 ambient const enum，它们的行为不一致哦～",
+      "咦，\"{0}\" 开著的时候 const enum 就没法正常用了，注意一下～"
+    ]
+  },
+  {
+    "key": "Cannot_assign_a_0_constructor_type_to_a_1_constructor_type_2672",
+    "variants": [
+      "\"{0}\" 构造函数类型不能赋给 \"{1}\" 构造函数类型，结构不兼容呢～",
+      "喂，\"{0}\" 和 \"{1}\" 的构造函数结构不一样，没法互相赋值哦"
+    ]
+  },
+  {
+    "key": "Cannot_assign_an_abstract_constructor_type_to_a_non_abstract_constructor_type_2517",
+    "variants": [
+      "抽象构造函数类型不能赋给非抽象的，语义不兼容，换一个吧～",
+      "咦，abstract 构造器不能塞进非 abstract 的坑里，类型不对呢"
+    ]
+  },
+  {
+    "key": "Cannot_assign_to_0_because_it_Is_a_class_2629",
+    "variants": [
+      "\"{0}\" 是个类，不能直接给类赋值哦，改改逻辑吧～",
+      "啊，类不是变量不能赋值，你是不是搞混了？"
+    ]
+  },
+  {
+    "key": "Cannot_assign_to_0_because_it_Is_a_constant_2588",
+    "variants": [
+      "常量是只读的，不能给 \"{0}\" 赋值哦，换个变量吧～",
+      "咦，\"{0}\" 声明成 const 了，就不能再改值啦，想想别的办法～"
+    ]
+  },
+  {
+    "key": "Cannot_assign_to_0_because_it_Is_a_function_2630",
+    "variants": [
+      "函数不能被当作赋值目标，\"{0}\" 是个函数哦～",
+      "喂，函数不能赋值！\"{0}\" 是 function，别想着改它～"
+    ]
+  },
+  {
+    "key": "Cannot_assign_to_0_because_it_Is_a_namespace_2631",
+    "variants": [
+      "命名空间不能成为赋值的目标，\"{0}\" 就是这样存在的～",
+      "namespace 是拿来组织代码的，不是让你赋值给它的，\"{0}\" 不能这么用～"
+    ]
+  },
+  {
+    "key": "Cannot_assign_to_0_because_it_Is_a_read_only_property_2540",
+    "variants": [
+      "\"{0}\" 是只读属性，没法给它赋值哦，换个思路吧～",
+      "咦，\"{0}\" 标了 readonly，写不进去啦，想想别的办法～"
+    ]
+  },
+  {
+    "key": "Cannot_assign_to_0_because_it_Is_an_enum_2628",
+    "variants": [
+      "枚举不能直接赋值，\"{0}\" 作为枚举成员是常量形式存在的～",
+      "enum 的成员都是常量，\"{0}\" 没法被重新赋值，别试了～"
+    ]
+  },
+  {
+    "key": "Cannot_assign_to_0_because_it_Is_an_import_2632",
+    "variants": [
+      "导入绑定的变量是不可写的，\"{0}\" 不能赋值哦～",
+      "import 进来的东西是只读的，\"{0}\" 不能重新赋值，换种写法吧～"
+    ]
+  },
+  {
+    "key": "Cannot_assign_to_0_because_it_Is_not_a_variable_2539",
+    "variants": [
+      "\"{0}\" 不是变量，没法赋值给它哦，检查一下是什么类型～",
+      "咦，\"{0}\" 这种东西不能赋值，它不是可变的变量，换个思路吧～"
+    ]
+  },
+  {
+    "key": "Cannot_assign_to_private_method_0_Private_methods_are_not_writable_2803",
+    "variants": [
+      "私有方法 \"{0}\" 不能赋值，私有方法天生就是不可写的～",
+      "喂，\"{0}\" 是 private 方法，外部没法动它的，别想了～"
+    ]
+  },
+  {
+    "key": "Cannot_augment_module_0_because_it_resolves_to_a_non_module_entity_2671",
+    "variants": [
+      "模块 \"{0}\" 解析出来不是模块实体，没法对它做 augment 哦～",
+      "咦，\"{0}\" 根本不是模块，declare module 找不到目标呢～"
+    ]
+  },
+  {
+    "key": "Cannot_augment_module_0_with_value_exports_because_it_resolves_to_a_non_module_entity_2649",
+    "variants": [
+      "带有值导出的模块 \"{0}\" 解析为非模块实体，无法扩充它～",
+      "module \"{0}\" 里有值导出但它不是真正的模块，augment 不了呢～"
+    ]
+  },
+  {
+    "key": "Cannot_compile_modules_using_option_0_unless_the_module_flag_Is_amd_or_system_6131",
+    "variants": [
+      "用 \"{0}\" 选项编译模块时，module 必须设为 amd 或 system，不然不行哦～",
+      "喂，\"{0}\" 配合 AMD 或 System 模块才有效，检查一下你的 module 配置～"
+    ]
+  },
+  {
+    "key": "Cannot_create_an_instance_of_an_abstract_class_2511",
+    "variants": [
+      "抽象类没法 new 出来哦，得先继承它再实例化子类～",
+      "abstract 类本来就是半成品，不能直接 new，写个子类继承它吧～"
+    ]
+  }
+]

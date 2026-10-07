@@ -1,0 +1,702 @@
+[
+  {
+    "key": "_0_accepts_too_few_arguments_to_be_used_as_a_decorator_here_Did_you_mean_to_call_it_first_and_write__1329",
+    "variants": [
+      "唔…“{0}”收到的参数太少了，当不了修饰器呢~ 你是不是要先调用它再写成 \"{0}()\" 呀？",
+      "欸？“{0}”的参数不够当修饰器用哦~ 要不要先调用它再写成 \"{0}()\" 呢？"
+    ]
+  },
+  {
+    "key": "_0_and_1_index_signatures_are_incompatible_2330",
+    "variants": [
+      "呀，“{0}” 和 “{1}” 的索引签名对不上呢，要修一下~",
+      "唔…“{0}” 跟 “{1}” 索引签名不兼容，知道嘛？"
+    ]
+  },
+  {
+    "key": "_0_and_1_operations_cannot_be_mixed_without_parentheses_5076",
+    "variants": [
+      "哼，“{0}” 和 “{1}” 不能混着用！加括号分开啦~",
+      "唔…“{0}” 和 “{1}” 的操作得用括号隔开才行哦？"
+    ]
+  },
+  {
+    "key": "_0_are_specified_twice_The_attribute_named_0_will_be_overwritten_2710",
+    "variants": [
+      "呀，“{0}” 被写了两次呢，后面的会把前面的 “{0}” 覆盖掉的！别忘了改~",
+      "唔…“{0}” 重复指定了两次，后面的会把前面的 “{0}” 覆盖哦~"
+    ]
+  },
+  {
+    "key": "_0_at_the_end_of_a_type_is_not_valid_TypeScript_syntax_Did_you_mean_to_write_1_17019",
+    "variants": [
+      "欸？类型末尾的 “{0}” 不是有效的 TypeScript 语法呢~ 是不是要写成 “{1}” ？",
+      "唔…类型末尾的 “{0}” TypeScript 不认哦，换成 “{1}” 试试？"
+    ]
+  },
+  {
+    "key": "_0_at_the_start_of_a_type_is_not_valid_TypeScript_syntax_Did_you_mean_to_write_1_17020",
+    "variants": [
+      "这个嘛…类型开头的 “{0}” 不是有效的 TypeScript 语法呢，改成 “{1}” 吧~",
+      "欸？类型开头的 “{0}” 不对哦，TypeScript 语法不支持，试试 “{1}”？"
+    ]
+  },
+  {
+    "key": "_0_can_only_be_imported_by_turning_on_the_esModuleInterop_flag_and_using_a_default_import_2596",
+    "variants": [
+      "唔…“{0}” 只能通过启用 \"esModuleInterop\" 并使用默认导入来导入呢~ 改改配置吧？",
+      "话说 “{0}” 的导入方式得改哦，打开 \"esModuleInterop\" 用默认导入才行呢~"
+    ]
+  },
+  {
+    "key": "_0_can_only_be_imported_by_using_a_default_import_2595",
+    "variants": [
+      "呀，“{0}” 只能靠默认导入来引入呢，其他写法不行哦~",
+      "唔…“{0}” 只能默认导入，知道吗？"
+    ]
+  },
+  {
+    "key": "_0_can_only_be_imported_by_using_a_require_call_or_by_turning_on_the_esModuleInterop_flag_and_using__2598",
+    "variants": [
+      "哼，“{0}” 只能用 require 调用或者默认导入来引入呢~",
+      "唔…“{0}” 的导入方式不对哦，要用 require 或默认导入才行？"
+    ]
+  },
+  {
+    "key": "_0_can_only_be_imported_by_using_a_require_call_or_by_using_a_default_import_2597",
+    "variants": [
+      "唔…“{0}” 只能用 require 调用或默认导入来引入呢~ 快改改吧！",
+      "话说 “{0}” 的导入方式不太对哦，要用 require 或默认导入才行呢？"
+    ]
+  },
+  {
+    "key": "_0_can_only_be_imported_by_using_import_1_require_2_or_a_default_import_2616",
+    "variants": [
+      "呀，“{0}” 只能这样导入：\"import “{1}” = require(“{2}”)\" 或用默认导入呢~",
+      "唔…“{0}” 只能用这种写法导入：\"import “{1}” = require(“{2}”)\"，要改改哦？"
+    ]
+  },
+  {
+    "key": "_0_can_only_be_imported_by_using_import_1_require_2_or_by_turning_on_the_esModuleInterop_flag_and_us_2617",
+    "variants": [
+      "欸？“{0}” 只能这样导入：\"import “{1}” = require(“{2}”)\"，还得打开 \"esModuleInterop\" 用默认导入才行呢~",
+      "唔…“{0}” 要用 \"import “{1}” = require(“{2}”)\" 或者打开 \"esModuleInterop\" 默认导入，知道嘛？"
+    ]
+  },
+  {
+    "key": "_0_cannot_be_used_as_a_JSX_component_2786",
+    "variants": [
+      "唔…“{0}” 不能当 JSX 组件用呢，检查一下~",
+      "呀，“{0}” 不能用作 JSX 组件哦，人家说不能用呢~"
+    ]
+  },
+  {
+    "key": "_0_cannot_be_used_as_a_value_because_it_was_exported_using_export_type_1362",
+    "variants": [
+      "欸？“{0}” 是用 \"export type\" 导出的，所以不能当值用呢~",
+      "唔…“{0}” 因为是用 \"export type\" 导出的，不能用作值哦？"
+    ]
+  },
+  {
+    "key": "_0_cannot_be_used_as_a_value_because_it_was_imported_using_import_type_1361",
+    "variants": [
+      "呀，“{0}” 是用 \"import type\" 导入的，所以不能当值用呢~",
+      "唔…“{0}” 因为用 \"import type\" 导入的，不能用作值哦？"
+    ]
+  },
+  {
+    "key": "_0_components_don_t_accept_text_as_child_elements_Text_in_JSX_has_the_type_string_but_the_expected_t_2747",
+    "variants": [
+      "唔…“{0}” 组件不接受纯文本作为子元素哦~ JSX 里文本是 \"string\" 类型，但 “{1}” 期望的是 “{2}” 类型呢，要改一下！",
+      "话说 “{0}” 组件不接受文本子元素，JSX 中文本类型是 \"string\"，但 “{1}” 的预期类型是 “{2}”，注意一下哦？"
+    ]
+  },
+  {
+    "key": "_0_could_be_instantiated_with_an_arbitrary_type_which_could_be_unrelated_to_1_5082",
+    "variants": [
+      "唔…“{0}” 可以用跟 “{1}” 完全无关的类型来实例化呢~ 这不太对哦！",
+      "话说 “{0}” 可以用不相关的任意类型实例化，跟 “{1}” 没关系呢？"
+    ]
+  },
+  {
+    "key": "_0_declarations_can_only_be_declared_inside_a_block_1156",
+    "variants": [
+      "哼，“{0}” 声明只能在代码块内部声明哦~ 放错地方啦！",
+      "唔…“{0}” 声明得放在块里面才行呢？"
+    ]
+  },
+  {
+    "key": "_0_declarations_can_only_be_used_in_TypeScript_files_8006",
+    "variants": [
+      "呀，“{0}” 声明只能在 TypeScript 文件里用哦~ 别放到 JS 文件里去啦！",
+      "唔…“{0}” 声明只能在 .ts 文件中使用呢，别忘了改~"
+    ]
+  },
+  {
+    "key": "_0_declarations_may_not_have_binding_patterns_1492",
+    "variants": [
+      "唔…“{0}” 声明不能带有绑定模式呢~ 换个写法吧！",
+      "呀，“{0}” 声明不能有绑定模式哦，笨蛋~"
+    ]
+  },
+  {
+    "key": "_0_declarations_must_be_initialized_1155",
+    "variants": [
+      "唔…“{0}” 声明必须有初始值呢~ 给个默认值吧！",
+      "呀，“{0}” 声明得有初始值才行哦？"
+    ]
+  },
+  {
+    "key": "_0_expected_1005",
+    "variants": [
+      "哼，这里应该是 “{0}” 呢！快改过来~",
+      "唔…这里期望的是 “{0}”，改改呗？"
+    ]
+  },
+  {
+    "key": "_0_has_a_string_type_but_must_have_syntactically_recognizable_string_syntax_when_isolatedModules_is__18055",
+    "variants": [
+      "唔…“{0}” 虽然有字符串类型，但启用 \"isolatedModules\" 后必须有语法上可识别的字符串语法呢~",
+      "话说 “{0}” 是字符串类型，但开 \"isolatedModules\" 时语法必须能被识别才行哦？"
+    ]
+  },
+  {
+    "key": "_0_has_no_exported_member_named_1_Did_you_mean_2_2724",
+    "variants": [
+      "唔…“{0}” 没有导出成员 “{1}” 呢~ 你是不是想找 “{2}”？",
+      "呀，“{0}” 里没有 “{1}” 这个成员哦，是不是打成了 “{2}”？"
+    ]
+  },
+  {
+    "key": "_0_implicitly_has_an_1_return_type_but_a_better_type_may_be_inferred_from_usage_7050",
+    "variants": [
+      "唔…“{0}” 隐式地有 “{1}” 返回类型呢~ 不过从用法看可以推断出更好的类型哦，加上注解吧！",
+      "话说 “{0}” 隐式返回 “{1}”，但根据用法能推出更好的类型呢？"
+    ]
+  },
+  {
+    "key": "_0_implicitly_has_return_type_any_because_it_does_not_have_a_return_type_annotation_and_is_reference_7023",
+    "variants": [
+      "哼，“{0}” 因为没有返回类型注解且自身有引用，隐式成了 \"any\" 返回类型呢~ 要加注解哦！",
+      "唔…“{0}” 隐式地成了 \"any\" 返回类型，因为没加注解还自引用了，快修一下吧？"
+    ]
+  },
+  {
+    "key": "_0_implicitly_has_type_any_because_it_does_not_have_a_type_annotation_and_is_referenced_directly_or__7022",
+    "variants": [
+      "唔…“{0}” 隐式地有了 \"any\" 类型呢~ 因为它没有类型注解还在自身初始化时引用了自己，快加上类型吧！",
+      "话说 “{0}” 因为没有类型注解且在自身初始化中引用了自己，隐式成了 \"any\" 类型哦？"
+    ]
+  },
+  {
+    "key": "_0_index_signatures_are_incompatible_2634",
+    "variants": [
+      "哼，“{0}” 索引签名不兼容呢！要修一下~",
+      "呀，“{0}” 索引签名不兼容，改改哦？"
+    ]
+  },
+  {
+    "key": "_0_index_type_1_is_not_assignable_to_2_index_type_3_2413",
+    "variants": [
+      "唔…'{0}' index type '{1}' is not assignable to '{2}' index type '{3}'. 呢~",
+      "话说'{0}' index type '{1}' is not assignable to '{2}' index type '{3}'.？"
+    ]
+  },
+  {
+    "key": "_0_is_a_primitive_but_1_is_a_wrapper_object_Prefer_using_0_when_possible_2692",
+    "variants": [
+      "唔…'{0}' is a primitive, but '{1}' is a wrapper object. Prefer using '{0}' when possible. 呢~",
+      "话说'{0}' is a primitive, but '{1}' is a wrapper object. Prefer using '{0}' when possible.？"
+    ]
+  },
+  {
+    "key": "_0_is_a_type_and_cannot_be_imported_in_JavaScript_files_Use_1_in_a_JSDoc_type_annotation_18042",
+    "variants": [
+      "唔…“{0}” 是类型，不能在 JavaScript 文件里导入呢~ 请在 JSDoc 类型注解里用 “{1}” 吧？",
+      "话说 “{0}” 是类型，没法在 JS 文件导入，要用 JSDoc 注解写 “{1}” 才行哦？"
+    ]
+  },
+  {
+    "key": "_0_is_a_type_and_must_be_imported_using_a_type_only_import_when_verbatimModuleSyntax_is_enabled_1484",
+    "variants": [
+      "哼，“{0}” 是类型，启用 \"verbatimModuleSyntax\" 时必须用仅类型导入呢~",
+      "唔…“{0}” 是类型，开 \"verbatimModuleSyntax\" 后得用 import type 导入哦？"
+    ]
+  },
+  {
+    "key": "_0_is_an_unused_renaming_of_1_Did_you_intend_to_use_it_as_a_type_annotation_2842",
+    "variants": [
+      "唔…“{0}” 是 “{1}” 的未使用重命名呢~ 你是不是打算把它当作类型注解用？",
+      "话说 “{0}” 其实是 “{1}” 的重命名但没用过哦，是不是该写成类型注解？"
+    ]
+  },
+  {
+    "key": "_0_is_assignable_to_the_constraint_of_type_1_but_1_could_be_instantiated_with_a_different_subtype_of_5075",
+    "variants": [
+      "唔…“{0}” 可以赋给 “{1}” 的约束，但 “{1}” 可以用其他子类型 “{2}” 实例化呢~ 类型约束有点宽哦！",
+      "话说 “{0}” 符合 “{1}” 的约束，不过 “{1}” 还能用其他子类型 “{2}” 实例化呢？"
+    ]
+  },
+  {
+    "key": "_0_is_automatically_exported_here_18044",
+    "variants": [
+      "唔…“{0}” 会自动导出到此处呢~ 注意别重复导出哦！",
+      "话说 “{0}” 自动在这里导出了呢？"
+    ]
+  },
+  {
+    "key": "_0_is_declared_but_its_value_is_never_read_6133",
+    "variants": [
+      "唔…已经声明了但从来没读过它的值呢~ 是不是写错了{0}？",
+      "话说被声明了却从未被读取过哦{0}，要删掉吗？"
+    ]
+  },
+  {
+    "key": "_0_is_declared_but_never_used_6196",
+    "variants": [
+      "唔…已经声明了但从未使用过呢~ 要删掉吗{0}？",
+      "呀{0}，声明了却没被用过哦，注意一下~"
+    ]
+  },
+  {
+    "key": "_0_is_declared_here_2728",
+    "variants": [
+      "唔…“{0}” 是在这里声明的哦~",
+      "话说 “{0}” 在这儿有声明呢？"
+    ]
+  },
+  {
+    "key": "_0_is_defined_as_a_property_in_class_1_but_is_overridden_here_in_2_as_an_accessor_2611",
+    "variants": [
+      "唔…'{0}' is defined as a property in class '{1}', but is overridden here in '{2}' as an accessor. 呢~",
+      "话说'{0}' is defined as a property in class '{1}', but is overridden here in '{2}' as an accessor.？"
+    ]
+  },
+  {
+    "key": "_0_is_defined_as_an_accessor_in_class_1_but_is_overridden_here_in_2_as_an_instance_property_2610",
+    "variants": [
+      "唔…'{0}' is defined as an accessor in class '{1}', but is overridden here in '{2}' as an instance property. 呢~",
+      "话说'{0}' is defined as an accessor in class '{1}', but is overridden here in '{2}' as an instance property.？"
+    ]
+  },
+  {
+    "key": "_0_is_deprecated_6385",
+    "variants": [
+      "唔…已经过时了哦~ 考虑换新的吧{0}！",
+      "话说已被弃用了呢{0}，找找替代品？"
+    ]
+  },
+  {
+    "key": "_0_is_not_a_valid_meta_property_for_keyword_1_Did_you_mean_2_17012",
+    "variants": [
+      "唔…“{0}” 不是关键字 “{1}” 的有效元属性呢~ 你是不是想写 “{2}”？",
+      "话说 “{0}” 不是 “{1}” 的有效元属性哦，会不会是 “{2}”？"
+    ]
+  },
+  {
+    "key": "_0_is_not_a_valid_meta_property_for_keyword_import_Did_you_mean_meta_or_defer_18061",
+    "variants": [
+      "唔…“{0}” 不是 import 关键字的有效元属性呢~ 你是说 meta 还是 defer？",
+      "呀，'{0}' 不是 import 的有效元属性哦，你想写 'meta' 还是 'defer'？"
+    ]
+  },
+  {
+    "key": "_0_is_not_allowed_as_a_parameter_name_1390",
+    "variants": [
+      "唔…不能把 '{0}' 用作参数名呢~ 换一个吧！",
+      "话说 '{0}' 不能做参数名哦，换个名字？"
+    ]
+  },
+  {
+    "key": "_0_is_not_allowed_as_a_variable_declaration_name_1389",
+    "variants": [
+      "唔…“{0}” 不能当变量声明名用呢~ 换个名字吧！",
+      "话说 “{0}” 不能用作变量名哦，改个名字？"
+    ]
+  },
+  {
+    "key": "_0_is_of_type_unknown_18046",
+    "variants": [
+      "唔…“{0}” 的类型是 \"未知\" 呢~ 检查一下类型定义吧！",
+      "话说 “{0}” 的类型是 unknown 哦？"
+    ]
+  },
+  {
+    "key": "_0_is_possibly_null_18047",
+    "variants": [
+      "唔…“{0}” 可能为 null 呢~ 加个非空检查吧！",
+      "话说 “{0}” 有可能是 null 哦，注意一下？"
+    ]
+  },
+  {
+    "key": "_0_is_possibly_null_or_undefined_18049",
+    "variants": [
+      "唔…“{0}” 可能为 null 或 undefined 呢~ 记得判空哦！",
+      "话说 “{0}” 可能是 null 或者 undefined 哦？"
+    ]
+  },
+  {
+    "key": "_0_is_possibly_undefined_18048",
+    "variants": [
+      "唔…“{0}” 可能为 undefined 呢~ 加个保护吧！",
+      "话说 “{0}” 有可能是 undefined 哦？"
+    ]
+  },
+  {
+    "key": "_0_is_referenced_directly_or_indirectly_in_its_own_base_expression_2506",
+    "variants": [
+      "唔…“{0}” 在自身的基表达式里直接或间接引用了自己呢~ 这样会死循环的，快改掉吧！",
+      "话说 “{0}” 在基表达式中自引用了，要注意一下哦？"
+    ]
+  },
+  {
+    "key": "_0_is_referenced_directly_or_indirectly_in_its_own_type_annotation_2502",
+    "variants": [
+      "唔…“{0}” 在自身的类型注解中直接或间接引用了自己呢~ 这样写有问题哦！",
+      "话说 “{0}” 类型注解里自引用了，这样不行呢？"
+    ]
+  },
+  {
+    "key": "_0_is_specified_more_than_once_so_this_usage_will_be_overwritten_2783",
+    "variants": [
+      "唔…“{0}” 被指定了多次呢，后面的会覆盖前面的哦~ 检查一下！",
+      "话说 “{0}” 重复指定了，用法会被覆盖呢？"
+    ]
+  },
+  {
+    "key": "_0_list_cannot_be_empty_1097",
+    "variants": [
+      "唔…“{0}” 列表不能为空呢~ 加点内容吧！",
+      "话说 “{0}” 列表不能为空哦，填点东西进去？"
+    ]
+  },
+  {
+    "key": "_0_modifier_already_seen_1030",
+    "variants": [
+      "唔…已经见过 “{0}” 修饰符了呢~ 重复了哦！",
+      "话说 “{0}” 修饰符已经出现过了呢？"
+    ]
+  },
+  {
+    "key": "_0_modifier_can_only_appear_on_a_type_parameter_of_a_class_interface_or_type_alias_1274",
+    "variants": [
+      "唔…“{0}” 修饰符只能用在类、接口或类型别名的类型参数上哦~ 放错地方啦！",
+      "话说 “{0}” 修饰符只能出现在类、接口或类型别名的类型参数上呢？"
+    ]
+  },
+  {
+    "key": "_0_modifier_can_only_appear_on_a_type_parameter_of_a_function_method_or_class_1277",
+    "variants": [
+      "唔…“{0}” 修饰符只能用在函数、方法或类的类型参数上哦~",
+      "话说 “{0}” 修饰符只能出现在函数、方法或类的类型参数上呢？"
+    ]
+  },
+  {
+    "key": "_0_modifier_cannot_appear_on_a_constructor_declaration_1089",
+    "variants": [
+      "唔…“{0}” 修饰符不能用在构造函数声明上哦~",
+      "话说 “{0}” 修饰符不能出现在构造函数声明中呢？"
+    ]
+  },
+  {
+    "key": "_0_modifier_cannot_appear_on_a_module_or_namespace_element_1044",
+    "variants": [
+      "唔…“{0}” 修饰符不能用在模块或命名空间元素上哦~",
+      "话说 “{0}” 修饰符不可出现在模块或命名空间元素上呢？"
+    ]
+  },
+  {
+    "key": "_0_modifier_cannot_appear_on_a_parameter_1090",
+    "variants": [
+      "唔…“{0}” 修饰符不能用在参数上哦~",
+      "话说 “{0}” 修饰符不能出现在参数上呢？"
+    ]
+  },
+  {
+    "key": "_0_modifier_cannot_appear_on_a_type_member_1070",
+    "variants": [
+      "唔…“{0}” 修饰符不能出现在类型成员上哦~",
+      "话说 “{0}” 修饰符不可出现在类型成员上呢？"
+    ]
+  },
+  {
+    "key": "_0_modifier_cannot_appear_on_a_type_parameter_1273",
+    "variants": [
+      "唔…“{0}” 修饰符不能用在类型参数上哦~",
+      "话说 “{0}” 修饰符不能出现在类型参数上呢？"
+    ]
+  },
+  {
+    "key": "_0_modifier_cannot_appear_on_a_using_declaration_1491",
+    "variants": [
+      "唔…“{0}” 修饰符不能用在 \"using\" 声明上哦~",
+      "话说 “{0}” 修饰符不能出现在 \"using\" 声明中呢？"
+    ]
+  },
+  {
+    "key": "_0_modifier_cannot_appear_on_an_await_using_declaration_1495",
+    "variants": [
+      "唔…“{0}” 修饰符不能用在 \"await using\" 声明上哦~",
+      "话说 “{0}” 修饰符不能出现在 \"await using\" 声明中呢？"
+    ]
+  },
+  {
+    "key": "_0_modifier_cannot_appear_on_an_index_signature_1071",
+    "variants": [
+      "唔…“{0}” 修饰符不能出现在索引签名上哦~",
+      "话说 “{0}” 修饰符不可出现在索引签名上呢？"
+    ]
+  },
+  {
+    "key": "_0_modifier_cannot_appear_on_class_elements_of_this_kind_1031",
+    "variants": [
+      "唔…“{0}” 修饰符不能出现在此类型的类元素上哦~",
+      "话说 “{0}” 修饰符不能用于此类型的类元素呢？"
+    ]
+  },
+  {
+    "key": "_0_modifier_cannot_be_used_here_1042",
+    "variants": [
+      "唔…“{0}” 修饰符不能在这里用哦~ 换个位置吧！",
+      "话说 “{0}” 修饰符此处不可用呢？"
+    ]
+  },
+  {
+    "key": "_0_modifier_cannot_be_used_in_an_ambient_context_1040",
+    "variants": [
+      "唔…“{0}” 修饰符不能在环境上下文中使用哦~",
+      "话说 “{0}” 修饰符不能在 ambient 上下文里用呢？"
+    ]
+  },
+  {
+    "key": "_0_modifier_cannot_be_used_with_1_modifier_1243",
+    "variants": [
+      "唔…'{0}' modifier cannot be used with '{1}' modifier. 呢~",
+      "话说'{0}' modifier cannot be used with '{1}' modifier.？"
+    ]
+  },
+  {
+    "key": "_0_modifier_cannot_be_used_with_a_private_identifier_18019",
+    "variants": [
+      "唔…“{0}” 修饰符不能与专用标识符一起用哦~",
+      "话说 “{0}” 修饰符不能和专用标识符共存呢？"
+    ]
+  },
+  {
+    "key": "_0_modifier_must_precede_1_modifier_1029",
+    "variants": [
+      "唔…“{0}” 修饰符必须排在 “{1}” 修饰符前面哦~ 调换一下顺序吧！",
+      "话说 “{0}” 要在 “{1}” 之前呢？"
+    ]
+  },
+  {
+    "key": "_0_must_be_followed_by_a_Unicode_property_value_expression_enclosed_in_braces_1531",
+    "variants": [
+      "唔…\"\\{0}\" 后面必须跟括在大括号中的 Unicode 属性值表达式哦~",
+      "话说 \"\\{0}\" 后必须接大括号括起来的 Unicode 属性值表达式呢？"
+    ]
+  },
+  {
+    "key": "_0_needs_an_explicit_type_annotation_2782",
+    "variants": [
+      "唔…“{0}” 需要显式类型注解呢~ 加上类型吧！",
+      "话说 “{0}” 要加类型注释哦？"
+    ]
+  },
+  {
+    "key": "_0_only_refers_to_a_type_but_is_being_used_as_a_namespace_here_2702",
+    "variants": [
+      "唔…“{0}” 只是个类型，不能当命名空间用哦~",
+      "话说 “{0}” 仅指类型，不能用作命名空间呢？"
+    ]
+  },
+  {
+    "key": "_0_only_refers_to_a_type_but_is_being_used_as_a_value_here_2693",
+    "variants": [
+      "唔…“{0}” 只是类型，这里却当值用了呢~ 检查一下用法！",
+      "话说 “{0}” 仅表示类型，不能当值用哦？"
+    ]
+  },
+  {
+    "key": "_0_only_refers_to_a_type_but_is_being_used_as_a_value_here_Did_you_mean_to_use_1_in_0_2690",
+    "variants": [
+      "唔…“{0}” 只是个类型，却在这里当值用呢~ 你是不是想用 “{1}” in “{0}”？",
+      "话说 “{0}” 仅引用类型，此处却当值用，要改成 “{1}” in “{0}” 吗？"
+    ]
+  },
+  {
+    "key": "_0_only_refers_to_a_type_but_is_being_used_as_a_value_here_Do_you_need_to_change_your_target_library_2585",
+    "variants": [
+      "唔…“{0}” 只是类型却被当值用了呢~ 要不要把 \"lib\" 编译器选项改成 es2015 或更高版本？",
+      "话说 “{0}” 仅指类型却当值用，试试把 \"lib\" 选项升到 es2015 以上吧？"
+    ]
+  },
+  {
+    "key": "_0_refers_to_a_UMD_global_but_the_current_file_is_a_module_Consider_adding_an_import_instead_2686",
+    "variants": [
+      "唔…“{0}” 是 UMD 全局变量，但当前文件是模块呢~ 要不要改成导入方式？",
+      "话说 “{0}” 指的是 UMD 全局，当前文件却是模块，加个导入吧？"
+    ]
+  },
+  {
+    "key": "_0_refers_to_a_value_but_is_being_used_as_a_type_here_Did_you_mean_typeof_0_2749",
+    "variants": [
+      "唔…“{0}” 表示的是值，却被当类型用了呢~ 你是不是想写 \"typeof {0}\"？",
+      "话说 “{0}” 是值却当类型用，要改成 \"类型 {0}\" 吗？"
+    ]
+  },
+  {
+    "key": "_0_resolves_to_a_type_and_must_be_marked_type_only_in_this_file_before_re_exporting_when_1_is_enable_1291",
+    "variants": [
+      "唔…'{0}' resolves to a type and must be marked type-only in this file before re-exporting when '{1}' is enabled. Consider using 'import type' where '{0}' is imported. 呢~",
+      "话说'{0}' resolves to a type and must be marked type-only in this file before re-exporting when '{1}' is enabled. Consider using 'import type' where '{0}' is imported.？"
+    ]
+  },
+  {
+    "key": "_0_resolves_to_a_type_and_must_be_marked_type_only_in_this_file_before_re_exporting_when_1_is_enable_1292",
+    "variants": [
+      "唔…'{0}' resolves to a type and must be marked type-only in this file before re-exporting when '{1}' is enabled. Consider using 'export type { {0} as default }'. 呢~",
+      "话说'{0}' resolves to a type and must be marked type-only in this file before re-exporting when '{1}' is enabled. Consider using 'export type { {0} as default }'.？"
+    ]
+  },
+  {
+    "key": "_0_resolves_to_a_type_only_declaration_and_must_be_imported_using_a_type_only_import_when_verbatimMo_1485",
+    "variants": [
+      "唔…“{0}” 解析为仅类型声明，启用 \"verbatimModuleSyntax\" 后必须用仅类型导入哦~",
+      "话说 “{0}” 是 type-only 声明，开 \"verbatimModuleSyntax\" 得用 import type 导入呢？"
+    ]
+  },
+  {
+    "key": "_0_resolves_to_a_type_only_declaration_and_must_be_marked_type_only_in_this_file_before_re_exporting_1289",
+    "variants": [
+      "唔…'{0}' resolves to a type-only declaration and must be marked type-only in this file before re-exporting when '{1}' is enabled. Consider using 'import type' where '{0}' is imported. 呢~",
+      "话说'{0}' resolves to a type-only declaration and must be marked type-only in this file before re-exporting when '{1}' is enabled. Consider using 'import type' where '{0}' is imported.？"
+    ]
+  },
+  {
+    "key": "_0_resolves_to_a_type_only_declaration_and_must_be_marked_type_only_in_this_file_before_re_exporting_1290",
+    "variants": [
+      "唔…'{0}' resolves to a type-only declaration and must be marked type-only in this file before re-exporting when '{1}' is enabled. Consider using 'export type { {0} as default }'. 呢~",
+      "话说'{0}' resolves to a type-only declaration and must be marked type-only in this file before re-exporting when '{1}' is enabled. Consider using 'export type { {0} as default }'.？"
+    ]
+  },
+  {
+    "key": "_0_resolves_to_a_type_only_declaration_and_must_be_re_exported_using_a_type_only_re_export_when_1_is_1448",
+    "variants": [
+      "唔…“{0}” 解析为仅类型声明，启用 “{1}” 时必须使用仅类型重新导出哦~",
+      "话说 “{0}” 是仅类型声明，开 “{1}” 后须用 type-only re-export 重新导出呢？"
+    ]
+  },
+  {
+    "key": "_0_should_be_set_inside_the_compilerOptions_object_of_the_config_json_file_6258",
+    "variants": [
+      "唔…“{0}” 应该设在 config json 文件的 \"compilerOptions\" 对象里呢~",
+      "话说 “{0}” 得放在 config.json 的 \"compilerOptions\" 里哦？"
+    ]
+  },
+  {
+    "key": "_0_tag_already_specified_1223",
+    "variants": [
+      "唔…“{0}” 标记已经指定过了呢~ 去重一下吧！",
+      "话说 “{0}” 标记已存在哦？"
+    ]
+  },
+  {
+    "key": "_0_was_also_declared_here_6203",
+    "variants": [
+      "唔…“{0}” 也在这声明过了呢~ 是不是重复了？",
+      "话说 “{0}” 这里也有声明哦？"
+    ]
+  },
+  {
+    "key": "_0_was_exported_here_1377",
+    "variants": [
+      "唔…“{0}” 在这里被导出了呢~",
+      "话说 “{0}” 在此处导出过哦？"
+    ]
+  },
+  {
+    "key": "_0_was_imported_here_1376",
+    "variants": [
+      "唔…“{0}” 在这里被导入了呢~",
+      "话说 “{0}” 在这里导入过哦？"
+    ]
+  },
+  {
+    "key": "_0_which_lacks_return_type_annotation_implicitly_has_an_1_return_type_7010",
+    "variants": [
+      "唔…缺少返回类型注解的 “{0}” 隐式地有 “{1}” 返回类型呢~ 加上注解吧！",
+      "话说 “{0}” 没加返回类型注解，隐式地成了 “{1}” 返回类型哦？"
+    ]
+  },
+  {
+    "key": "_0_which_lacks_return_type_annotation_implicitly_has_an_1_yield_type_7055",
+    "variants": [
+      "唔…缺少返回类型注解的 “{0}” 隐式地有 “{1}” 产出类型呢~",
+      "话说 “{0}” 没加返回类型注解，隐式地成了 “{1}” 产出类型哦？"
+    ]
+  },
+  {
+    "key": "A_0_modifier_cannot_be_used_with_an_import_declaration_1079",
+    "variants": [
+      "唔…A '{0}' modifier cannot be used with an import declaration. 呢~",
+      "话说A '{0}' modifier cannot be used with an import declaration.？"
+    ]
+  },
+  {
+    "key": "A_0_parameter_must_be_the_first_parameter_2680",
+    "variants": [
+      "唔…A '{0}' parameter must be the first parameter. 呢~",
+      "话说A '{0}' parameter must be the first parameter.？"
+    ]
+  },
+  {
+    "key": "A_bigint_literal_cannot_be_used_as_a_property_name_1539",
+    "variants": [
+      "唔…BigInt 字面量不能当属性名用哦~ 用字符串包裹一下吧！",
+      "话说 BigInt 字面量不能用作属性名称呢？"
+    ]
+  },
+  {
+    "key": "A_bigint_literal_cannot_use_exponential_notation_1352",
+    "variants": [
+      "唔…BigInt 字面量里不能用指数符号哦~ 直接写整数吧！",
+      "话说 BigInt 字面量不支持指数记法呢？"
+    ]
+  },
+  {
+    "key": "A_bigint_literal_must_be_an_integer_1353",
+    "variants": [
+      "唔…BigInt 字面量必须是整数哦~ 别写小数啦！",
+      "话说 BigInt 字面量只能写整数呢？"
+    ]
+  },
+  {
+    "key": "A_binding_pattern_parameter_cannot_be_optional_in_an_implementation_signature_2463",
+    "variants": [
+      "唔…绑定模式参数在实现签名中不能设为可选哦~ 去掉问号吧！",
+      "话说实现签名里绑定模式参数不能是 optional 呢？"
+    ]
+  },
+  {
+    "key": "A_break_statement_can_only_be_used_within_an_enclosing_iteration_or_switch_statement_1105",
+    "variants": [
+      "唔…\"break\" 语句只能在封闭的迭代或 switch 语句内用哦~ 放错地方啦！",
+      "话说 \"break\" 只能用在它所在的那个循环或 switch 里面呢？"
+    ]
+  },
+  {
+    "key": "A_break_statement_can_only_jump_to_a_label_of_an_enclosing_statement_1116",
+    "variants": [
+      "唔…\"break\" 语句只能跳转到封闭语句的标签哦~ 检查你的标签名！",
+      "话说 \"break\" 只能跳到外层语句的标签呢？"
+    ]
+  },
+  {
+    "key": "A_character_class_must_not_contain_a_reserved_double_punctuator_Did_you_mean_to_escape_it_with_backs_1522",
+    "variants": [
+      "唔…字符类里不能包含保留的双标点符号哦~ 要不要加反斜杠转义？",
+      "话说字符类不得包含保留双标点符号，得用反斜杠转一下呢？"
+    ]
+  }
+]

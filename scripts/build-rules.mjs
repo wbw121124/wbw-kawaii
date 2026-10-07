@@ -193,6 +193,18 @@ try {
 const tsEntries = collectChunks(/^ts-\d+\.json$/, 'ts', tsInvMap);
 const packEntries = collectChunks(/^pack-\d+\.json$/, 'pack', null);
 
+// 加载 curate 文件（优先级高于普通 chunks，覆盖同名 key）
+const tsCurateEntries = [];
+try {
+  for (const f of fs.readdirSync(CHUNKS_TS_DIR).filter(n => /^ts-curate-\d+\.json$/.test(n)).sort()) {
+    const arr = loadChunkFile(path.join(CHUNKS_TS_DIR, f));
+    if (!arr) continue;
+    for (const e of arr) {
+      if (e && typeof e.key === 'string' && Array.isArray(e.variants)) tsCurateEntries.push(e);
+    }
+  }
+} catch {}
+
 // markdownlint: 直接从 chunks/markdownlint.json 加载（无 inventory，key 即英文原文）
 const markdownlintEntries = [];
 try {
@@ -212,6 +224,27 @@ for (const e of tsEntries) {
   if (excludeSet.has(e.key)) continue;
   tsRules.set(e.key, [...new Set(e.variants)]);
 }
+// curate 覆盖：同 key 以 curate 变体为准（仅占位符一致的条目）
+let curateOverridden = 0;
+for (const e of tsCurateEntries) {
+  if (excludeSet.has(e.key)) continue;
+  const sourceText = tsInvMap?.get(e.key)?.zh ?? tsInvMap?.get(e.key)?.en ?? e.key;
+  const tSrc = tokens(sourceText);
+  const validVariants = e.variants.filter(v => {
+    const tVar = tokens(v);
+    return seqKey(tSrc) === seqKey(tVar);
+  });
+  if (validVariants.length === e.variants.length) {
+    tsRules.set(e.key, [...new Set(e.variants)]);
+    curateOverridden++;
+  } else if (validVariants.length > 0) {
+    // 部分通过：用有效变体
+    tsRules.set(e.key, [...new Set(validVariants)]);
+    curateOverridden++;
+  }
+  // 全部不通过：保持算法生成结果
+}
+if (curateOverridden > 0) console.log(`[build] curate 通过占位符校验覆盖: ${curateOverridden}/${tsCurateEntries.length} 条`);
 
 const packRules = new Map();
 for (const e of packEntries) {
@@ -285,6 +318,33 @@ console.log(`cpptools: 规则键 ${cpptoolsRules.size}, identity ${identity} 条
 console.log(`TS: ${tsRules.size} 条, PACK: ${packRules.size} 条, MarkdownLint: ${markdownlintEntries.length} 条`);
 if (tsMissed > 0) console.warn(`[warn] TS 未覆盖 ${tsMissed} 条`);
 if (packMissed > 0) console.warn(`[warn] PACK 未覆盖 ${packMissed} 条`);
+if (tsCurateEntries.length > 0) console.log(`[build] curate 覆盖: ${tsCurateEntries.length} 条（优先级高于普通 chunks）`);
+
+// 质量报告：模板率 + 结构差异化率
+function qualityReport(entries, scope) {
+  let templateCount = 0, totalV = 0, structDiff = 0, structSame = 0;
+  for (const e of entries) {
+    for (const v of e.variants) {
+      totalV++;
+      if (/[啦哦呢嘛呗]~$/.test(v)) templateCount++;
+    }
+    if (e.variants.length >= 2) {
+      const hasComma1 = e.variants[0].includes('，') || e.variants[0].includes('。');
+      const hasComma2 = e.variants[1].includes('，') || e.variants[1].includes('。');
+      const sent1 = (e.variants[0].match(/[。！？!?]/g) || []).length;
+      const sent2 = (e.variants[1].match(/[。！？!?]/g) || []).length;
+      const kind1 = /[？?]/.test(e.variants[0]) ? 'q' : /[！!]/.test(e.variants[0]) ? 'e' : 'd';
+      const kind2 = /[？?]/.test(e.variants[1]) ? 'q' : /[！!]/.test(e.variants[1]) ? 'e' : 'd';
+      const persona1 = /(唔|欸|诶|咦|哼|人家|笨蛋|杂鱼|这个嘛|话说|啊嘞|喵)/.test(e.variants[0]);
+      const persona2 = /(唔|欸|诶|咦|哼|人家|笨蛋|杂鱼|这个嘛|话说|啊嘞|喵)/.test(e.variants[1]);
+      if (sent1 !== sent2 || kind1 !== kind2 || persona1 !== persona2) structDiff++;
+      else structSame++;
+    }
+  }
+  const pairTotal = structDiff + structSame;
+  console.log(`[${scope}] 变体总数=${totalV}, 模板结尾率=${(templateCount/totalV*100).toFixed(1)}%, 结构差异率=${pairTotal?((structDiff/pairTotal)*100).toFixed(1):0}%`);
+}
+qualityReport(tsEntries.concat(tsCurateEntries), 'TS');
 
 console.log('\ncpptools 覆盖率（按原文文本精确命中规则表的非 null 条目占比）:');
 for (const ver of COVERAGE) {

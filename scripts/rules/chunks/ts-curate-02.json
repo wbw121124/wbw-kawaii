@@ -1,0 +1,702 @@
+[
+  {
+    "key": "A_set_accessor_cannot_have_a_return_type_annotation_1095",
+    "variants": [
+      "唔…\"set\" 访问器不需要返回类型哦，把标注去掉吧~",
+      "欸？set 访问器加了返回类型会报错呢，删掉它就好咯~"
+    ]
+  },
+  {
+    "key": "A_set_accessor_cannot_have_an_optional_parameter_1051",
+    "variants": [
+      "欸？set 访问器的参数可是必须的呀，不能设成可选哦",
+      "人家告诉过你啦，set 访问器参数不可以是可选的~"
+    ]
+  },
+  {
+    "key": "A_set_accessor_cannot_have_rest_parameter_1053",
+    "variants": [
+      "呀，set 访问器不接受 rest 参数呢，乖乖改一下吧",
+      "set 访问器参数怎么能是 rest 参数呢，快调整一下呗~"
+    ]
+  },
+  {
+    "key": "A_set_accessor_must_have_exactly_one_parameter_1049",
+    "variants": [
+      "唔…set 访问器就需要一个参数，不多不少刚好一个哦",
+      "是不是 set 访问器的参数数量不对呀？要恰好一个才行呢~"
+    ]
+  },
+  {
+    "key": "A_set_accessor_parameter_cannot_have_an_initializer_1052",
+    "variants": [
+      "欸？set 访问器的参数怎么可以自带初始值嘛，快去掉它~",
+      "这个嘛…set 访问器参数是不允许写初始值的哦，知道吗"
+    ]
+  },
+  {
+    "key": "A_spread_argument_must_either_have_a_tuple_type_or_be_passed_to_a_rest_parameter_2556",
+    "variants": [
+      "呀，展开的参数要么是元组类型，要么得传进 rest 参数才行哦，小笨蛋~",
+      "欸？你这样展开参数是不对的啦——要么给个元组类型，要么传给 rest 参数嘛~"
+    ]
+  },
+  {
+    "key": "A_super_call_must_be_a_root_level_statement_within_a_constructor_of_a_derived_class_that_contains_in_2401",
+    "variants": [
+      "唔…当派生类含有初始化属性、参数属性或专用标识符时，super 调用得放在构造函数根部才行呀",
+      "超级调用可不是想放哪就放哪的哦，包含特殊成员的派生类里，它必须是根级语句呢~"
+    ]
+  },
+  {
+    "key": "A_super_call_must_be_the_first_statement_in_the_constructor_to_refer_to_super_or_this_when_a_derived_2376",
+    "variants": [
+      "哎呀，派生类有那些特殊成员的话，super 调用就得第一个出现才行呢，别放错位置啦",
+      "唔…「super」或「this」的引用前，super 调用必须是构造函数里的第一句话哦，记住咯~"
+    ]
+  },
+  {
+    "key": "A_this_based_type_guard_is_not_compatible_with_a_parameter_based_type_guard_2518",
+    "variants": [
+      "欸？基于 this 的类型防护和基于参数的类型防护不能同时用哦，换一个吧~",
+      "是不是这两种类型防护冲突啦？不能兼得呢，选一个就好咯~"
+    ]
+  },
+  {
+    "key": "A_this_type_is_available_only_in_a_non_static_member_of_a_class_or_interface_2526",
+    "variants": [
+      "唔…\"this\" 类型只能在类或接口的非静态成员里用哦，静态成员里可不行呢",
+      "哎呀，this 类型放静态成员里是无效的呀，挪到非静态成员里去嘛~"
+    ]
+  },
+  {
+    "key": "A_top_level_export_modifier_cannot_be_used_on_value_declarations_in_a_CommonJS_module_when_verbatimM_1287",
+    "variants": [
+      "这个嘛…启用 verbatimModuleSyntax 时，CommonJS 模块里的值声明可不能加顶级 export 修饰符哦",
+      "人家说了呀，verbatimModuleSyntax 开着的时候，CommonJS 模块的值声明不能用顶级 export，知道吗~"
+    ]
+  },
+  {
+    "key": "A_tsconfig_json_file_is_already_defined_at_Colon_0_5054",
+    "variants": [
+      "欸？\"tsconfig.json\" 文件在 \"{0}\" 已经定义过啦，不用重复哟",
+      "话说 \"{0}\" 里已经有 tsconfig.json 的定义了，是不是重复了呢~"
+    ]
+  },
+  {
+    "key": "A_tuple_member_cannot_be_both_optional_and_rest_5085",
+    "variants": [
+      "唔…元组的成员不能同时又是可选又是 rest 的哦，这个规定要记住呢",
+      "哎呀，元组成员兼做可选和 rest 是不行的啦，选一个就好咯~"
+    ]
+  },
+  {
+    "key": "A_tuple_type_cannot_be_indexed_with_a_negative_value_2514",
+    "variants": [
+      "咦？负数可不能用来索引元组类型哦，用正数嘛~",
+      "欸？元组索引不能用负值呀，快换成正数好啦~"
+    ]
+  },
+  {
+    "key": "A_type_assertion_expression_is_not_allowed_in_the_left_hand_side_of_an_exponentiation_expression_Con_17007",
+    "variants": [
+      "唔…乘方表达式的左边不能放类型断言哦，用括号把它们包起来就好啦",
+      "欸？类型断言跑到乘方表达式左边是不行的呢，记得加括号隔开嘛~"
+    ]
+  },
+  {
+    "key": "A_type_literal_property_cannot_have_an_initializer_1247",
+    "variants": [
+      "呀，类型字面量的属性不能带初始值哦，删掉初始化表达式吧~",
+      "唔…类型字面量里的属性是不可赋初始值的，知道吗？"
+    ]
+  },
+  {
+    "key": "A_type_only_import_can_specify_a_default_import_or_named_bindings_but_not_both_1363",
+    "variants": [
+      "欸？仅类型导入只能选默认导入或命名绑定之一哦，不能两个都要呢~",
+      "这个嘛…type-only 导入要么默认要么命名，不能兼得啦，选一个吧~"
+    ]
+  },
+  {
+    "key": "A_type_predicate_cannot_reference_a_rest_parameter_1229",
+    "variants": [
+      "唔…类型谓词是不能引用 rest 参数的哦，换个方式表达吧",
+      "欸？rest 参数没法在类型谓词里引用呢，要改一改哦~"
+    ]
+  },
+  {
+    "key": "A_type_predicate_cannot_reference_element_0_in_a_binding_pattern_1230",
+    "variants": [
+      "哼，类型谓词里不能引用绑定模式中的元素 \"{0}\" 哦，换个写法吧~",
+      "欸？绑定模式里的 \"{0}\" 在类型谓词中用不了呢，要调整一下哦~"
+    ]
+  },
+  {
+    "key": "A_type_predicate_is_only_allowed_in_return_type_position_for_functions_and_methods_1228",
+    "variants": [
+      "唔…类型谓词只能在函数和方法的返回类型位置用哦，别放错地方啦",
+      "欸？类型谓词只允许出现在返回类型那儿呢，其他地方可不行哦~"
+    ]
+  },
+  {
+    "key": "A_type_predicate_s_type_must_be_assignable_to_its_parameter_s_type_2677",
+    "variants": [
+      "呀，类型谓词的类型得能赋给参数类型才行哦，不然会报错呢~",
+      "唔…谓词返回的类型要和参数类型兼容才行，看看对不对吧~"
+    ]
+  },
+  {
+    "key": "A_type_referenced_in_a_decorated_signature_must_be_imported_with_import_type_or_a_namespace_import_w_1272",
+    "variants": [
+      "这个嘛…开了 isolatedModules 和 emitDecoratorMetadata 之后，饰签名里的类型必须用 import type 或命名空间导入才行哦",
+      "欸？饰签名引用的类型要用 \"import type\" 或命名空间导入才能过呢，别忘了设置~"
+    ]
+  },
+  {
+    "key": "A_variable_whose_type_is_a_unique_symbol_type_must_be_const_1332",
+    "variants": [
+      "唔…类型是 unique symbol 的变量得用 const 声明哦，改一下吧~",
+      "欸？unique symbol 类型的变量必须声明为 const 才行呢，记好了~"
+    ]
+  },
+  {
+    "key": "A_yield_expression_is_only_allowed_in_a_generator_body_1163",
+    "variants": [
+      "哼，\"yield\" 表达式只能在生成器函数体里用哦，放错地方啦~",
+      "欸？yield 不是哪儿都能放的，只有生成器正文才可以呢，快检查一下吧~"
+    ]
+  },
+  {
+    "key": "Abstract_method_0_in_class_1_cannot_be_accessed_via_super_expression_2513",
+    "variants": [
+      "唔…不能通过 super 访问 \"{1}\" 类中的抽象方法 \"{0}\" 哦，抽象方法没法被子类 super 调用呢",
+      "欸？\"{1}\" 里的抽象方法 \"{0}\" 用 super 访问不到呀，知道为啥吗？"
+    ]
+  },
+  {
+    "key": "Abstract_methods_can_only_appear_within_an_abstract_class_1244",
+    "variants": [
+      "唔…抽象方法只能定义在抽象类里面哦，别放错类啦~",
+      "欸？抽象方法得在抽象类里才行呢，非抽象类中不允许哦~"
+    ]
+  },
+  {
+    "key": "abstract_modifier_can_only_appear_on_a_class_method_or_property_declaration_1242",
+    "variants": [
+      "这个嘛…\"abstract\" 修饰符只能用于类、方法或属性的声明，其他地方不行哦",
+      "欸？abstract 可不是随便能加的，只在类成员声明中有效呢，知道吗~"
+    ]
+  },
+  {
+    "key": "Abstract_properties_can_only_appear_within_an_abstract_class_1253",
+    "variants": [
+      "唔…抽象属性也只能出现在抽象类中哦，快移到正确的位置吧~",
+      "欸？抽象属性是抽象类的专属成员呢，别放在普通类里啦~"
+    ]
+  },
+  {
+    "key": "Abstract_property_0_in_class_1_cannot_be_accessed_in_the_constructor_2715",
+    "variants": [
+      "呀，类 \"{1}\" 中的抽象属性 \"{0}\" 不能在构造函数里访问哦，因为此时还没实现呢~",
+      "欸？构造函数里访问 \"{1}\" 类的抽象属性 \"{0}\" 是不行的啦，子类还没给它具体实现呢~"
+    ]
+  },
+  {
+    "key": "Accessibility_modifier_already_seen_1028",
+    "variants": [
+      "唔…可访问性修饰符重复出现啦，删掉一个吧~",
+      "欸？同一个成员怎么能有两个访问修饰符呢，选一个就好咯~"
+    ]
+  },
+  {
+    "key": "accessor_modifier_can_only_appear_on_a_property_declaration_1275",
+    "variants": [
+      "这个嘛…\"accessor\" 修饰符只能用于属性声明，别用在方法上哦~",
+      "欸？accessor 是属性专用的修饰符呢，方法声明里用不了~"
+    ]
+  },
+  {
+    "key": "Accessors_are_only_available_when_targeting_ECMAScript_5_and_higher_1056",
+    "variants": [
+      "唔…访问器功能需要目标 ECMAScript 版本至少为 5 才行哦，检查一下你的配置~",
+      "欸？target 低于 ES5 的话访问器是不可用的呢，升到 ES5 以上吧~"
+    ]
+  },
+  {
+    "key": "Accessors_must_both_be_abstract_or_non_abstract_2676",
+    "variants": [
+      "呀，get 和 set 访问器要么都是抽象的，要么都是非抽象的，不能混搭哦~",
+      "欸？取值函数这对搭档得保持一致才行呢，一个抽象一个非抽象可不行~"
+    ]
+  },
+  {
+    "key": "Add_0_to_unresolved_variable_90008",
+    "variants": [
+      "唔…给未解析的变量加上 \"{0}.\" 限定符试试？",
+      "欸？这个变量没找到哦，加上 \"{0}.\" 前缀看看能不能解决~"
+    ]
+  },
+  {
+    "key": "Add_a_return_statement_95111",
+    "variants": [
+      "唔…这个函数好像少了个 return 语句哦，加一个吧~",
+      "欸？函数没有返回值呢，需要补一个 return 语句才行~"
+    ]
+  },
+  {
+    "key": "Add_a_return_type_to_the_function_declaration_9031",
+    "variants": [
+      "呀，函数声明需要加上返回类型哦，不然类型推断可能会出问题~",
+      "欸？给这个函数声明加上返回类型吧，这样更明确呢~"
+    ]
+  },
+  {
+    "key": "Add_a_return_type_to_the_function_expression_9030",
+    "variants": [
+      "唔…函数表达式也该有返回类型标注哦，补上吧~",
+      "欸？这个函数表达式的返回类型还没写呢，加上会更清晰哦~"
+    ]
+  },
+  {
+    "key": "Add_a_return_type_to_the_get_accessor_declaration_9032",
+    "variants": [
+      "唔…get 访问器声明也缺返回类型哦，赶紧补上吧~",
+      "欸？get 访问器没写返回类型呢，类型推断可能会猜错哦~"
+    ]
+  },
+  {
+    "key": "Add_a_return_type_to_the_method_9034",
+    "variants": [
+      "唔…方法也需要返回类型标注哦，加上吧~",
+      "欸？这个方法的返回类型还没指定呢，写上会更安全哦~"
+    ]
+  },
+  {
+    "key": "Add_a_type_annotation_to_the_parameter_0_9028",
+    "variants": [
+      "呀，参数 \"{0}\" 需要加上类型注释哦，不然默认为 any 呢~",
+      "欸？参数 \"{0}\" 的类型还没标注，给它加一个吧~"
+    ]
+  },
+  {
+    "key": "Add_a_type_annotation_to_the_property_0_9029",
+    "variants": [
+      "唔…属性 \"{0}\" 缺少类型注释哦，加上去吧~",
+      "欸？属性 \"{0}\" 没写类型呢，类型推断可能不准确哦~"
+    ]
+  },
+  {
+    "key": "Add_a_type_annotation_to_the_variable_0_9027",
+    "variants": [
+      "呀，变量 \"{0}\" 需要类型注释哦，不然会被推断成 any~",
+      "欸？变量 \"{0}\" 没标注类型呢，给它加上吧~"
+    ]
+  },
+  {
+    "key": "Add_a_type_to_parameter_of_the_set_accessor_declaration_9033",
+    "variants": [
+      "唔…set 访问器声明的参数需要类型哦，别漏掉了~",
+      "欸？set 的参数也得有类型注解呢，快加上吧~"
+    ]
+  },
+  {
+    "key": "Add_all_missing_async_modifiers_95041",
+    "variants": [
+      "唔…这些函数都缺 async 修饰符哦，要不要全部加上？",
+      "欸？好多个函数都没标 async 呢，统一补上吧~"
+    ]
+  },
+  {
+    "key": "Add_all_missing_attributes_95168",
+    "variants": [
+      "唔…需要添加所有缺失的属性哦，一个一个看吧~",
+      "欸？这里缺了不少属性呢，一次性都加上吧~"
+    ]
+  },
+  {
+    "key": "Add_all_missing_call_parentheses_95068",
+    "variants": [
+      "呀，好多调用都少了括号呢，全部加上吧~",
+      "欸？这些调用表达式缺了括号哦，补上就好啦~"
+    ]
+  },
+  {
+    "key": "Add_all_missing_function_declarations_95157",
+    "variants": [
+      "唔…这些函数声明都缺了哦，需要补充一下~",
+      "欸？有好几个函数还没声明呢，快补齐吧~"
+    ]
+  },
+  {
+    "key": "Add_all_missing_imports_95064",
+    "variants": [
+      "唔…好多导入都缺了哦，全部加进来吧~",
+      "欸？这些模块还没导入呢，一次性补全吧~"
+    ]
+  },
+  {
+    "key": "Add_all_missing_members_95022",
+    "variants": [
+      "唔…类中缺了不少成员呢，要都补上吗？",
+      "欸？这些成员还没定义哦，全部添加上吧~"
+    ]
+  },
+  {
+    "key": "Add_all_missing_override_modifiers_95162",
+    "variants": [
+      "唔…这些重写方法都缺 override 修饰符哦，加一下吧~",
+      "欸？override 修饰符漏了好多呢，统一补上吧~"
+    ]
+  },
+  {
+    "key": "Add_all_missing_parameters_95190",
+    "variants": [
+      "唔…函数调用缺了不少参数呢，都补上吧~",
+      "欸？这些调用少了一些参数哦，检查一下~"
+    ]
+  },
+  {
+    "key": "Add_all_missing_properties_95166",
+    "variants": [
+      "唔…对象里缺了些属性呢，全部加进去吧~",
+      "欸？这些属性还没写哦，补上吧~"
+    ]
+  },
+  {
+    "key": "Add_all_missing_return_statement_95114",
+    "variants": [
+      "唔…好几个函数都缺 return 语句呢，全部补上吧~",
+      "欸？这些函数没有返回值哦，加上 return 吧~"
+    ]
+  },
+  {
+    "key": "Add_all_missing_super_calls_95039",
+    "variants": [
+      "唔…派生类构造函数里都缺 super() 调用呢，赶紧加上~",
+      "欸？子类构造函数没调 super 哦，补上吧~"
+    ]
+  },
+  {
+    "key": "Add_all_missing_type_annotations_90067",
+    "variants": [
+      "唔…好多地方都缺类型注释呢，统一补上吧~",
+      "欸？类型注释漏了不少，一口气全加上~"
+    ]
+  },
+  {
+    "key": "Add_all_optional_parameters_95193",
+    "variants": [
+      "唔…这些参数都是可选的吧，全部加上？",
+      "欸？参数缺少可选标记呢，确认一下~"
+    ]
+  },
+  {
+    "key": "Add_annotation_of_type_0_90062",
+    "variants": [
+      "唔…给这个表达式加上 \"{0}\" 类型的注释吧~",
+      "欸？这个地方的类型注释缺了 \"{0}\" 呢，补上吧~"
+    ]
+  },
+  {
+    "key": "Add_async_modifier_to_containing_function_90029",
+    "variants": [
+      "唔…包含它的函数需要 async 修饰符哦，加上吧~",
+      "欸？外层函数忘加 async 了呢，补上才能用 await~"
+    ]
+  },
+  {
+    "key": "Add_await_95083",
+    "variants": [
+      "唔…这里需要加 await 哦，等待 Promise 完成~",
+      "欸？Promise 没等呢，加上 await 吧~"
+    ]
+  },
+  {
+    "key": "Add_await_to_initializer_for_0_95084",
+    "variants": [
+      "唔…\"{0}\" 的初始值设定项需要 await 哦~",
+      "欸？\"{0}\" 初始化时忘了 await 了呢，补上吧~"
+    ]
+  },
+  {
+    "key": "Add_await_to_initializers_95089",
+    "variants": [
+      "唔…这些初始值设定项都需要 await 哦~",
+      "欸？初始化表达式里缺了 await 呢，统一补上~"
+    ]
+  },
+  {
+    "key": "Add_braces_to_arrow_function_95059",
+    "variants": [
+      "唔…箭头函数需要大括号来包裹函数体哦~",
+      "欸？这个箭头函数没加大括号呢，加上吧~"
+    ]
+  },
+  {
+    "key": "Add_const_to_all_unresolved_variables_95082",
+    "variants": [
+      "唔…所有未解析的变量都应该用 const 声明哦~",
+      "欸？这些变量没加 const 呢，补上吧~"
+    ]
+  },
+  {
+    "key": "Add_const_to_unresolved_variable_95081",
+    "variants": [
+      "唔…这个未解析的变量用 const 声明吧~",
+      "欸？变量忘了加 const 了呢，加上吧~"
+    ]
+  },
+  {
+    "key": "Add_definite_assignment_assertion_to_property_0_95020",
+    "variants": [
+      "唔…属性 \"{0}\" 需要明确赋值断言（!）来告诉 TypeScript 它一定会被赋值~",
+      "欸？属性 \"{0}\" 还没确认会赋值呢，加个 ! 吧~"
+    ]
+  },
+  {
+    "key": "Add_definite_assignment_assertions_to_all_uninitialized_properties_95028",
+    "variants": [
+      "唔…所有未初始化的属性都需要明确赋值断言哦~",
+      "欸？这些属性还没确认会赋值，统统加 ! 吧~"
+    ]
+  },
+  {
+    "key": "Add_export_to_make_this_file_into_a_module_95097",
+    "variants": [
+      "唔…想让这个文件成为模块的话，加个 \"export {}\" 就行啦~",
+      "欸？文件还没有导出语句呢，加一个变成模块吧~"
+    ]
+  },
+  {
+    "key": "Add_extends_constraint_2211",
+    "variants": [
+      "唔…类型参数需要加上 extends 约束哦~",
+      "欸？这个类型参数没有限制呢，加个 extends 吧~"
+    ]
+  },
+  {
+    "key": "Add_extends_constraint_to_all_type_parameters_2212",
+    "variants": [
+      "唔…所有类型参数都应该有 extends 约束哦~",
+      "欸？类型参数们都没加约束呢，统一加上吧~"
+    ]
+  },
+  {
+    "key": "Add_import_from_0_90057",
+    "variants": [
+      "唔…需要从 \"{0}\" 导入哦，加个 import 语句吧~",
+      "欸？这个符号还没导入呢，从 \"{0}\" 引进来~"
+    ]
+  },
+  {
+    "key": "Add_index_signature_for_property_0_90017",
+    "variants": [
+      "唔…属性 \"{0}\" 需要一个索引签名来支持动态访问哦~",
+      "欸？\"{0}\" 想用索引访问的话，得加个索引签名呢~"
+    ]
+  },
+  {
+    "key": "Add_initializer_to_property_0_95019",
+    "variants": [
+      "唔…属性 \"{0}\" 缺少初始值设定项哦，给它一个初始值吧~",
+      "欸？属性 \"{0}\" 没初始化呢，加个默认值吧~"
+    ]
+  },
+  {
+    "key": "Add_initializers_to_all_uninitialized_properties_95027",
+    "variants": [
+      "唔…所有未初始化的属性都需要初始值呢~",
+      "欸？这些属性都没给初始值，统一加上吧~"
+    ]
+  },
+  {
+    "key": "Add_missing_attributes_95167",
+    "variants": [
+      "唔…这个声明缺了几个属性哦~",
+      "欸？属性还没写全呢，补上吧~"
+    ]
+  },
+  {
+    "key": "Add_missing_call_parentheses_95067",
+    "variants": [
+      "唔…调用表达式需要括号哦~",
+      "欸？这里忘了加括号呢，加上吧~"
+    ]
+  },
+  {
+    "key": "Add_missing_comma_for_object_member_completion_0_95187",
+    "variants": [
+      "唔…对象成员 \"{0}\" 后面需要逗号哦~",
+      "欸？\"{0}\" 这个成员后面忘记加分隔逗号了呢，补上吧~"
+    ]
+  },
+  {
+    "key": "Add_missing_enum_member_0_95063",
+    "variants": [
+      "唔…枚举里缺了成员 \"{0}\" 呢，加进去吧~",
+      "欸？\"{0}\" 还没定义在枚举中哦，补上吧~"
+    ]
+  },
+  {
+    "key": "Add_missing_function_declaration_0_95156",
+    "variants": [
+      "唔…函数 \"{0}\" 还没声明呢，加一个吧~",
+      "欸？\"{0}\" 函数找不到哦，定义一下~"
+    ]
+  },
+  {
+    "key": "Add_missing_new_operator_to_all_calls_95072",
+    "variants": [
+      "唔…这些调用都需要 new 运算符哦~",
+      "欸？构造函数调用忘了加 new 了呢，全部加上~"
+    ]
+  },
+  {
+    "key": "Add_missing_new_operator_to_call_95071",
+    "variants": [
+      "唔…这个调用需要 new 运算符哦~",
+      "欸？调用构造函数忘加 new 了呢，补上吧~"
+    ]
+  },
+  {
+    "key": "Add_missing_parameter_to_0_95188",
+    "variants": [
+      "唔…调用 \"{0}\" 时缺了一个参数哦~",
+      "欸？\"{0}\" 少传了参数呢，检查一下~"
+    ]
+  },
+  {
+    "key": "Add_missing_parameters_to_0_95189",
+    "variants": [
+      "唔…调用 \"{0}\" 时缺了几个参数呢~",
+      "欸？\"{0}\" 的参数没传全哦，补上吧~"
+    ]
+  },
+  {
+    "key": "Add_missing_properties_95165",
+    "variants": [
+      "唔…对象里缺了几个属性呢~",
+      "欸？这些属性还没写哦，加上吧~"
+    ]
+  },
+  {
+    "key": "Add_missing_super_call_90001",
+    "variants": [
+      "唔…派生类构造函数里需要 super() 调用哦~",
+      "欸？子类构造函数没调 super 呢，快补上~"
+    ]
+  },
+  {
+    "key": "Add_missing_typeof_95052",
+    "variants": [
+      "唔…这里需要用 typeof 运算符哦~",
+      "欸？类型操作符忘写 typeof 了呢，加上吧~"
+    ]
+  },
+  {
+    "key": "Add_names_to_all_parameters_without_names_95073",
+    "variants": [
+      "唔…没名字的参数都需要命名哦~",
+      "欸？匿名参数可不好维护呢，都给它们取个名字吧~"
+    ]
+  },
+  {
+    "key": "Add_optional_parameter_to_0_95191",
+    "variants": [
+      "唔…给 \"{0}\" 加上可选参数吧~",
+      "欸？\"{0}\" 的参数应该是可选的哦，加个 ? 吧~"
+    ]
+  },
+  {
+    "key": "Add_optional_parameters_to_0_95192",
+    "variants": [
+      "唔…\"{0}\" 的好几个参数都应该是可选的~",
+      "欸？\"{0}\" 的这些参数都需要标可选呢，统一加上~"
+    ]
+  },
+  {
+    "key": "Add_or_remove_braces_in_an_arrow_function_95058",
+    "variants": [
+      "唔…箭头函数的大括号需要根据函数体调整哦~",
+      "欸？这个箭头函数的大括号格式不对呢，看看该加还是该去掉~"
+    ]
+  },
+  {
+    "key": "Add_override_modifier_95160",
+    "variants": [
+      "唔…这个方法需要 override 修饰符哦~",
+      "欸？重写父类方法忘加 override 了呢，加上吧~"
+    ]
+  },
+  {
+    "key": "Add_parameter_name_90034",
+    "variants": [
+      "唔…这个参数需要名字哦~",
+      "欸？参数没写名字呢，给它一个标识符吧~"
+    ]
+  },
+  {
+    "key": "Add_qualifier_to_all_unresolved_variables_matching_a_member_name_95037",
+    "variants": [
+      "唔…这些未解析的变量名和成员名冲突了，加上限定符吧~",
+      "欸？变量名和成员重名了呢，加上限定符区分一下吧~"
+    ]
+  },
+  {
+    "key": "Add_resolution_mode_import_attribute_95196",
+    "variants": [
+      "唔…需要添加 \"resolution-mode\" 导入属性哦~",
+      "欸？导入属性里缺了 \"resolution-mode\" 呢，补上吧~"
+    ]
+  },
+  {
+    "key": "Add_resolution_mode_import_attribute_to_all_type_only_imports_that_need_it_95197",
+    "variants": [
+      "唔…所有需要 \"resolution-mode\" 的仅类型导入都要加上哦~",
+      "欸？这些 type-only 导入缺了 resolution-mode 属性呢，统一补上~"
+    ]
+  },
+  {
+    "key": "Add_return_type_0_90063",
+    "variants": [
+      "唔…需要给这个函数添加返回类型 \"{0}\" 哦~",
+      "欸？返回类型还没写，是 \"{0}\" 呢，补上吧~"
+    ]
+  },
+  {
+    "key": "Add_satisfies_and_a_type_assertion_to_this_expression_satisfies_T_as_T_to_make_the_type_explicit_9035",
+    "variants": [
+      "唔…用 satisfies T as T 让类型更明确吧，或者加类型断言也行哦~",
+      "欸？这个表达式类型不够明确呢，试试 satisfies T as T 的方式吧~"
+    ]
+  },
+  {
+    "key": "Add_satisfies_and_an_inline_type_assertion_with_0_90068",
+    "variants": [
+      "唔…用 \"{0}\" 添加 satisfies 和内联类型断言吧~",
+      "欸？用 \"{0}\" 来标注 satisfies 和类型断言，类型就清楚了~"
+    ]
+  },
+  {
+    "key": "Add_to_all_uncalled_decorators_95044",
+    "variants": [
+      "唔…未调用的修饰器需要加上 \"()\" 哦~",
+      "欸？这些修饰器忘调用了呢，加上括号吧~"
+    ]
+  },
+  {
+    "key": "Add_ts_ignore_to_all_error_messages_95042",
+    "variants": [
+      "唔…可以在这些错误前加 \"@ts-ignore\" 来暂时忽略哦~",
+      "欸？嫌错误烦的话加 \"@ts-ignore\" 吧，不过最好还是修一下~"
+    ]
+  },
+  {
+    "key": "Add_undefined_to_a_type_when_accessed_using_an_index_6674",
+    "variants": [
+      "唔…用索引访问时类型里要加上 \"undefined\" 哦~",
+      "欸？索引访问可能返回 undefined 呢，类型里把它加上吧~"
+    ]
+  }
+]
