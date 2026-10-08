@@ -42,6 +42,14 @@
       {
         "command": "wbw-kawaii.status",
         "title": "Kawaii: 查看改写状态与覆盖率"
+      },
+      {
+        "command": "wbw-kawaii.cyclePersona",
+        "title": "Kawaii: 切换人设风格"
+      },
+      {
+        "command": "wbw-kawaii.whimper",
+        "title": "Kawaii: 示弱彩蛋"
       }
     ],
     "configuration": {
@@ -71,8 +79,59 @@
           "type": "boolean",
           "default": true,
           "description": "启用 pylint 报错可爱化（运行时拦截）"
+        },
+        "wbw-kawaii.personaStyle": {
+          "type": "string",
+          "enum": [
+            "soft",
+            "tsundere",
+            "derriere",
+            "cool"
+          ],
+          "default": "soft",
+          "description": "人设风格：soft=软萌, tsundere=傲娇, derriere=毒舌, cool=冷淡可爱"
+        },
+        "wbw-kawaii.kawaiiIntensity": {
+          "type": "string",
+          "enum": [
+            "subtle",
+            "normal",
+            "bold"
+          ],
+          "default": "normal",
+          "description": "可爱强度：subtle=微妙, normal=标准, bold=重度"
+        },
+        "wbw-kawaii.targets": {
+          "type": "object",
+          "default": {
+            "cpptools": true,
+            "typescript": true,
+            "cssHtml": true,
+            "markdownlint": true,
+            "pylint": true
+          },
+          "description": "按目标启用可爱化"
+        },
+        "wbw-kawaii.customFallback": {
+          "type": "string",
+          "default": null,
+          "description": "自定义兜底后缀，覆盖人设风格选择"
         }
       }
+    },
+    "menus": {
+      "editor/context": [
+        {
+          "command": "wbw-kawaii.patch",
+          "when": "editorFocus && resourceLangId == typescript || editorFocus && resourceLangId == javascript || editorFocus && resourceLangId == cpp || editorFocus && resourceLangId == c",
+          "group": "1_modification"
+        },
+        {
+          "command": "wbw-kawaii.status",
+          "when": "editorFocus",
+          "group": "z_commands"
+        }
+      ]
     }
   },
   "scripts": {

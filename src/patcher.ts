@@ -67,7 +67,9 @@ export class KawaiiPatcher {
     }
 
     const opts: PatchOptions = {
-      decorateFallback: cfg.get<boolean>('fallbackDecorate', true)
+      decorateFallback: cfg.get<boolean>('fallbackDecorate', true),
+      personaStyle: cfg.get<'soft'>('personaStyle', 'soft') ,
+      intensity: cfg.get<'normal'>('kawaiiIntensity', 'normal')
     };
 
     // ===== 运行时拦截：markdownlint / pylint DiagnosticCollection =====
@@ -460,7 +462,7 @@ export class KawaiiPatcher {
         lines.push(`  状态: 没有消息文件（语言 ${locale}）`);
       } else {
         const content = fs.readFileSync(file, 'utf8');
-        const res = patchContent(content, { decorateFallback: cfg.get<boolean>('fallbackDecorate', true) });
+        const res = patchContent(content, { decorateFallback: cfg.get<boolean>('fallbackDecorate', true), personaStyle: cfg.get<'soft'>('personaStyle', 'soft') , intensity: cfg.get<'normal'>('kawaiiIntensity', 'normal') });
         lines.push(
           `  版本: ${version}`,
           `  规则版本: ${RULES_VERSION}`,
@@ -499,4 +501,27 @@ export class KawaiiPatcher {
     this.channel.show(true);
     void vscode.window.showInformationMessage(`wbw kawaii: 详见输出面板`);
   }
+
+  async cyclePersona(): Promise<void> {
+    const cfg = vscode.workspace.getConfiguration('wbw-kawaii');
+    const current = cfg.get<string>('personaStyle', 'soft');
+    const styles = ['soft', 'tsundere', 'derriere', 'cool'];
+    const idx = styles.indexOf(current);
+    const next = styles[(idx + 1) % styles.length];
+    await cfg.update('personaStyle', next, vscode.ConfigurationTarget.Global);
+    void vscode.window.showInformationMessage('wbw kawaii: persona changed to ' + next);
+  }
+
+  async whimper(): Promise<void> {
+    const input = await vscode.window.showInputBox({ prompt: 'Say something...', placeHolder: 'Type here...' });
+    if (!input) return;
+    const { isWhimperInput } = require('./persona');
+    if (isWhimperInput(input)) {
+      const style = vscode.workspace.getConfiguration('wbw-kawaii').get<string>('personaStyle', 'soft');
+      const { getPersona } = require('./persona');
+      const msg = getPersona(style as any).easterEggMessage;
+      if (msg) void vscode.window.showWarningMessage('wbw kawaii: ' + msg);
+    }
+  }
+
 }

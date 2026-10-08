@@ -1,14 +1,12 @@
 // 纯文本改写核心：不依赖 vscode 模块，便于 node 直接单测。
 import { RULES, RULES_VERSION, IDENTITY_VALUES } from './rules.generated';
+import { getFallbackSuffix, shouldSkipDecorate, KawaiiOptions } from './kawaii-options';
 
 export { RULES, RULES_VERSION, IDENTITY_VALUES };
+export interface PatchOptions extends KawaiiOptions {}
 
-// 未命中条目的统一兜底装饰后缀（正则替换追加）
-export const FALLBACK_SUFFIX = ' 喵~';
-
-export interface PatchOptions {
-  decorateFallback: boolean;
-}
+// 向后兼容：默认兜底后缀（soft 人设）
+export const FALLBACK_SUFFIX = " ~";
 
 export type EntryKind = 'null' | 'hit' | 'decorated' | 'kept' | 'already' | 'identity';
 
@@ -69,7 +67,6 @@ export function transformValue(value: string, index: number, opts: PatchOptions)
   if (IDENTITY.has(value)) return { value, kind: 'identity' };
   // 幂等保护：已是可爱文案（规则产物）或已带兜底后缀的，不再动
   if (CUTE_VALUES.has(value)) return { value, kind: 'already' };
-  if (value.endsWith(FALLBACK_SUFFIX)) return { value, kind: 'already' };
 
   const variants = RULES[value];
   if (variants && variants.length > 0) {
@@ -82,8 +79,11 @@ export function transformValue(value: string, index: number, opts: PatchOptions)
 
   // 空串/纯空白是占位片段，装饰后会凭空多出内容
   if (value.trim() === '') return { value, kind: 'kept' };
-  if (opts.decorateFallback) {
-    return { value: value.replace(/\s+$/u, '') + FALLBACK_SUFFIX, kind: 'decorated' };
+  const suffix = getFallbackSuffix(opts);
+  if (suffix && value.endsWith(suffix)) return { value, kind: 'already' };
+  if (shouldSkipDecorate(value, opts.intensity)) return { value, kind: 'kept' };
+  if (opts.decorateFallback && suffix) {
+    return { value: value.replace(/\\s+$/u, '') + suffix, kind: 'decorated' };
   }
   return { value, kind: 'kept' };
 }

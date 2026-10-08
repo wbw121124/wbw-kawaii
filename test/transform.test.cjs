@@ -16,8 +16,8 @@ const {
 } = require('../out/transform.js');
 
 const BASELINE_DIR = path.join(__dirname, '..', 'assets', 'baseline');
-const on = { decorateFallback: true };
-const off = { decorateFallback: false };
+const on = { decorateFallback: true, personaStyle: "soft", intensity: "normal" };
+const off = { decorateFallback: false, personaStyle: "soft", intensity: "normal" };
 
 test('RULES_VERSION 已生成', () => {
   assert.match(RULES_VERSION, /^sha256:[0-9a-f]{16}$/);
