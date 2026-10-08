@@ -11,9 +11,17 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            engine/package-lock.json
 
       - name: Cache cpptools baseline (vsix 提取产物)
         uses: actions/cache@v4
@@ -24,6 +32,14 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Install engine deps
+        run: npm ci
+        working-directory: engine
+
+      - name: Build engine（release .node + wasm，vsix 运行时四件套）
+        run: npm run build && npm run build:wasm
+        working-directory: engine
+
       - name: Fetch baselines
         run: npm run fetch-baseline
 
@@ -33,7 +49,7 @@ jobs:
       - name: Check generated rules in sync
         run: git diff --exit-code src/rules.generated.ts
 
-      - name: Test
+      - name: Test（golden 三跑：ts / native / wasm）
         run: npm test
 
       - name: Package

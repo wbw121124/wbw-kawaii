@@ -28,7 +28,9 @@ jobs:
         with:
           node-version: 22
           cache: npm
-          cache-dependency-path: engine/package-lock.json
+          cache-dependency-path: |
+            engine/package-lock.json
+            package-lock.json
 
       - name: Cargo test
         run: cargo test --workspace
@@ -44,6 +46,24 @@ jobs:
 
       - name: Smoke + parity (native ↔ wasm)
         run: npm test
+
+      - name: Install root deps（golden 三跑用）
+        run: npm ci
+        working-directory: .
+
+      - name: Cache cpptools baseline（golden 覆盖率用）
+        uses: actions/cache@v4
+        with:
+          path: assets/baseline
+          key: cpptools-baseline-1.34.4-1.19.7-1.35.3
+
+      - name: Fetch baselines
+        run: npm run fetch-baseline
+        working-directory: .
+
+      - name: Golden 三跑（tsc + ts / native / wasm，43 测试 × 3）
+        run: npm test
+        working-directory: .
 
   wasm:
     name: wasm32
