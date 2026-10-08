@@ -10,11 +10,21 @@ import {
   shouldPatchTarget
 } from './targets';
 import { buildManifest, readManifest, writeManifest, ManifestTarget } from './targets-manifest';
+import { TS_RULES, PACK_RULES, MARKDOWNLINT_RULES } from './rules.generated';
+import { getPersona, isWhimperInput, PersonaStyle } from './persona';
 
 export type RunReason = 'startup' | 'extensions-changed' | 'config-enabled' | 'manual';
 
 function sha256(data: string | Buffer): string {
   return crypto.createHash('sha256').update(data).digest('hex');
+}
+
+function buildOpts(cfg: vscode.WorkspaceConfiguration): PatchOptions {
+  return {
+    decorateFallback: cfg.get<boolean>('fallbackDecorate', true),
+    personaStyle: cfg.get<PersonaStyle>('personaStyle', 'soft'),
+    intensity: cfg.get<'subtle' | 'normal' | 'bold'>('kawaiiIntensity', 'normal'),
+  };
 }
 
 export class KawaiiPatcher {
@@ -66,21 +76,17 @@ export class KawaiiPatcher {
       return;
     }
 
-    const opts: PatchOptions = {
-      decorateFallback: cfg.get<boolean>('fallbackDecorate', true),
-      personaStyle: cfg.get<'soft'>('personaStyle', 'soft') ,
-      intensity: cfg.get<'normal'>('kawaiiIntensity', 'normal')
-    };
+    const opts = buildOpts(cfg);
 
     // ===== 运行时拦截：markdownlint / pylint DiagnosticCollection =====
     if (isZhCn && cfg.get<boolean>('enableMarkdownlint', true)) {
-      const { MARKDOWNLINT_RULES } = require('./rules.generated');
+      
       interceptDiagnosticCollection('markdownlint', (source, message) =>
         transformMarkdownlint(message, MARKDOWNLINT_RULES));
       this.log('[markdownlint] 运行时拦截已激活');
     }
     if (isZhCn && cfg.get<boolean>('enablePylint', true)) {
-      const { PACK_RULES } = require('./rules.generated');
+      
       interceptDiagnosticCollection('PyLinter', (source, message) =>
         transformPylint(message, PACK_RULES));
       this.log('[pylint] 运行时拦截已激活');
@@ -157,13 +163,13 @@ export class KawaiiPatcher {
       let res: { content: string; stats: { hits: number; decorated: number }; changed: boolean };
       switch (t.kind) {
         case 'tsDiagTable':
-          res = patchTsDiag(input, require('./rules.generated').TS_RULES);
+          res = patchTsDiag(input, TS_RULES);
           break;
         case 'jsonObject':
-          res = patchJsonObject(input, require('./rules.generated').TS_RULES);
+          res = patchJsonObject(input, TS_RULES);
           break;
         case 'packBundle':
-          res = patchPackBundle(input, require('./rules.generated').PACK_RULES);
+          res = patchPackBundle(input, PACK_RULES);
           break;
         case 'bundleTemplate':
           res = patchBundleTemplate(input, null, opts);
@@ -307,9 +313,9 @@ export class KawaiiPatcher {
     if (meta && meta.state === 'patched' && meta.rulesVersion !== RULES_VERSION) {
       if (fs.existsSync(backupPath)) {
         const backup = fs.readFileSync(backupPath, 'utf8');
-        if (sha256(backup) === (meta as any).originalHash) {
+        if (sha256(backup) === meta?.originalHash) {
           input = backup;
-          inputHash = (meta as any).originalHash;
+          inputHash = meta?.originalHash;
           this.log(`规则版本变化（${meta.rulesVersion} → ${RULES_VERSION}），从备份取回原文后重新改写`);
         } else {
           this.log('警告: 备份与记录的原始哈希不一致，无法回退旧改写，按当前文件继续');
@@ -326,10 +332,10 @@ export class KawaiiPatcher {
         rulesVersion: RULES_VERSION,
         sourceVersion: version,
         locale: vscode.env.language,
-        originalHash: meta ? (meta as any).originalHash : inputHash,
+        originalHash: meta ? meta?.originalHash : inputHash,
         patchedHash: inputHash,
         updatedAt: new Date().toISOString()
-      } as any);
+      } as TargetMeta);
       this.log(`无需改写（文件未变化）。${formatStats(res.stats)}`);
       return;
     }
@@ -343,7 +349,7 @@ export class KawaiiPatcher {
       originalHash: inputHash,
       patchedHash: sha256(res.content),
       updatedAt: new Date().toISOString()
-    } as any);
+    } as TargetMeta);
     this.log(`改写完成（cpptools ${version}）。${formatStats(res.stats)}`);
   }
 
@@ -432,7 +438,7 @@ export class KawaiiPatcher {
       originalHash: sha256(original),
       patchedHash: sha256(original),
       updatedAt: new Date().toISOString()
-    } as any);
+    } as TargetMeta);
     this.log('已从备份还原 cpptools 消息文件（state=restored，自动改写暂停）');
     const choice = await vscode.window.showInformationMessage(
       'wbw kawaii: 已还原原始报错文案，重载窗口后生效。若不希望下次启动再次改写，请保持 wbw-kawaii.enabled 关闭（当前已记录还原状态）。',
@@ -462,7 +468,7 @@ export class KawaiiPatcher {
         lines.push(`  状态: 没有消息文件（语言 ${locale}）`);
       } else {
         const content = fs.readFileSync(file, 'utf8');
-        const res = patchContent(content, { decorateFallback: cfg.get<boolean>('fallbackDecorate', true), personaStyle: cfg.get<'soft'>('personaStyle', 'soft') , intensity: cfg.get<'normal'>('kawaiiIntensity', 'normal') });
+        const res = patchContent(content, buildOpts(cfg));
         lines.push(
           `  版本: ${version}`,
           `  规则版本: ${RULES_VERSION}`,
@@ -515,11 +521,11 @@ export class KawaiiPatcher {
   async whimper(): Promise<void> {
     const input = await vscode.window.showInputBox({ prompt: 'Say something...', placeHolder: 'Type here...' });
     if (!input) return;
-    const { isWhimperInput } = require('./persona');
+    
     if (isWhimperInput(input)) {
       const style = vscode.workspace.getConfiguration('wbw-kawaii').get<string>('personaStyle', 'soft');
-      const { getPersona } = require('./persona');
-      const msg = getPersona(style as any).easterEggMessage;
+      
+      const msg = getPersona(style as PersonaStyle).easterEggMessage;
       if (msg) void vscode.window.showWarningMessage('wbw kawaii: ' + msg);
     }
   }
