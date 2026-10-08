@@ -25,13 +25,15 @@ function optsJson(opts) {
   return opts === undefined || opts === null ? '' : JSON.stringify(opts);
 }
 
+function rulesJson(rules) {
+  return rules === undefined || rules === null ? 'null' : JSON.stringify(rules);
+}
+
 /**
- * 实例化 engine.wasm 并返回引擎对象（与 native 壳 API 镜像）。
- * @param {string|URL|Uint8Array|ArrayBuffer} wasmSource wasm 字节 / 文件路径 / URL
+ * 由已实例化的 wasm instance 构造引擎对象（同步；与 createWasmEngine 返回值镜像）。
+ * @param {WebAssembly.Instance} instance
  */
-export async function createWasmEngine(wasmSource) {
-  const bytes = await toBytes(wasmSource);
-  const { instance } = await WebAssembly.instantiate(bytes, {});
+export function engineFromInstance(instance) {
   const exp = instance.exports;
 
   function allocWrite(str) {
@@ -70,6 +72,10 @@ export async function createWasmEngine(wasmSource) {
     } finally {
       for (const [p, l] of inputs) freeInput(p, l);
     }
+  }
+
+  function callJson(fn, strs) {
+    return JSON.parse(callStrs(fn, strs));
   }
 
   return {
@@ -123,5 +129,90 @@ export async function createWasmEngine(wasmSource) {
       if (status !== 0) throw new Error(out || 'getStats 失败');
       return JSON.parse(out);
     },
+
+    // ── P4 patch 级 API（与 napi 壳 / TS transform 系列镜像） ──
+
+    tokenize(s) {
+      return callJson((...a) => exp.kawaii_tokenize(...a), [s]);
+    },
+    transformValue(value, index, opts) {
+      // index 是标量（TS 内未参与运算），单独走参数位
+      const [vp, vl] = allocWrite(value);
+      const [op, ol] = allocWrite(optsJson(opts));
+      try {
+        const status = exp.kawaii_transform_value(vp, vl, index | 0, op, ol);
+        const out = readResult();
+        if (status !== 0) throw new Error(out || 'transformValue 失败');
+        return JSON.parse(out);
+      } finally {
+        freeInput(vp, vl);
+        freeInput(op, ol);
+      }
+    },
+    patchContent(content, opts) {
+      return callJson((...a) => exp.kawaii_patch_content(...a), [
+        content,
+        optsJson(opts),
+      ]);
+    },
+    formatStats(stats) {
+      return callStrs((...a) => exp.kawaii_format_stats(...a), [
+        JSON.stringify(stats),
+      ]);
+    },
+    patchTsDiag(content, rules, opts) {
+      return callJson((...a) => exp.kawaii_patch_ts_diag(...a), [
+        content,
+        rulesJson(rules),
+        optsJson(opts),
+      ]);
+    },
+    patchJsonObject(content, rules, opts) {
+      return callJson((...a) => exp.kawaii_patch_json_object(...a), [
+        content,
+        rulesJson(rules),
+        optsJson(opts),
+      ]);
+    },
+    patchPackBundle(content, rules, opts) {
+      return callJson((...a) => exp.kawaii_patch_pack_bundle(...a), [
+        content,
+        rulesJson(rules),
+        optsJson(opts),
+      ]);
+    },
+    patchBundleTemplate(content, rules, opts) {
+      return callJson((...a) => exp.kawaii_patch_bundle_template(...a), [
+        content,
+        rulesJson(rules),
+        optsJson(opts),
+      ]);
+    },
+    transformMarkdownlintWithRules(msg, rules, opts, code) {
+      return callStrs((...a) => exp.kawaii_transform_markdownlint_rules(...a), [
+        msg,
+        rulesJson(rules),
+        optsJson(opts),
+        code ?? '',
+      ]);
+    },
+    transformPylintWithRules(msg, rules, opts, code) {
+      return callStrs((...a) => exp.kawaii_transform_pylint_rules(...a), [
+        msg,
+        rulesJson(rules),
+        optsJson(opts),
+        code ?? '',
+      ]);
+    },
   };
+}
+
+/**
+ * 实例化 engine.wasm 并返回引擎对象（与 native 壳 API 镜像）。
+ * @param {string|URL|Uint8Array|ArrayBuffer} wasmSource wasm 字节 / 文件路径 / URL
+ */
+export async function createWasmEngine(wasmSource) {
+  const bytes = await toBytes(wasmSource);
+  const { instance } = await WebAssembly.instantiate(bytes, {});
+  return engineFromInstance(instance);
 }

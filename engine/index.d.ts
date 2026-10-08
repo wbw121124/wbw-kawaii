@@ -16,6 +16,42 @@ export interface EngineStats {
   ruleCount: number
 }
 
+/** 规则表（TS `Record<string, string[]>`）。 */
+export type RuleTable = Record<string, string[]>
+
+/** 单条目结果（TS `EntryResult`；null 条目 value 为 null）。 */
+export interface EntryResult {
+  value: string | null
+  kind: 'null' | 'hit' | 'decorated' | 'kept' | 'already' | 'identity'
+}
+
+/** patchContent 统计（8 字段，与 TS 一致）。 */
+export interface PatchStats {
+  total: number
+  nulls: number
+  hits: number
+  decorated: number
+  identity: number
+  kept: number
+  already: number
+  changed: number
+}
+
+/** patchContent 结果。 */
+export interface PatchResult {
+  content: string
+  stats: PatchStats
+  changed: boolean
+}
+
+/** transform-new 系列结果（stats 仅 hits/decorated）。 */
+export interface NewPatchResult {
+  content: string
+  hits: number
+  decorated: number
+  changed: boolean
+}
+
 /** 统一引擎对象（native 与 wasm 两路镜像）。 */
 export interface Engine {
   path: 'native' | 'wasm'
@@ -37,6 +73,27 @@ export interface Engine {
   getStats(): EngineStats
   /** 自述串（仅 native 路径）。 */
   engineInfo?(): string
+  // ── P4 patch 级 API（native 直通 / wasm 镜像） ──
+  /** 占位符切分（TS `tokenize`）。 */
+  tokenize(s: string): string[]
+  /** 单条目转换（TS `transformValue(value, index, opts)`）。 */
+  transformValue(value: string, index: number, opts?: EngineOpts): EntryResult
+  /** 整段内容改写（TS `patchContent`）。 */
+  patchContent(content: string, opts?: EngineOpts): PatchResult
+  /** 统计文案（TS `formatStats`）。 */
+  formatStats(stats: PatchStats): string
+  /** TS diag 表补丁。 */
+  patchTsDiag(content: string, rules: RuleTable, opts?: EngineOpts): NewPatchResult
+  /** zh JSON 行补丁。 */
+  patchJsonObject(content: string, rules: RuleTable, opts?: EngineOpts): NewPatchResult
+  /** 语言包 bundle 补丁。 */
+  patchPackBundle(content: string, rules: RuleTable, opts?: EngineOpts): NewPatchResult
+  /** bundle 模板串补丁。 */
+  patchBundleTemplate(content: string, rules: RuleTable | null, opts?: EngineOpts): NewPatchResult
+  /** MarkdownLint 消息 + 指定规则表。 */
+  transformMarkdownlintWithRules(msg: string, rules: RuleTable, opts?: EngineOpts, code?: string): string
+  /** PyLint 消息 + 指定规则表。 */
+  transformPylintWithRules(msg: string, rules: RuleTable, opts?: EngineOpts, code?: string): string
 }
 
 /** 三级回退加载：native → engine.wasm → null（调用方走 TS 实现）。 */

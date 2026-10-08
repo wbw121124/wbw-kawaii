@@ -36,6 +36,23 @@ impl EngineOpts {
         }
         Ok(o)
     }
+
+    /// 独立（无引擎状态）求值选项：缺省 persona=soft / intensity=normal /
+    /// decorate=true——对齐 TS `getPersona(undefined) ?? soft` 与 `getOpts` 默认。
+    pub fn to_eval(&self) -> EvalOptions {
+        EvalOptions {
+            persona: match self.persona_style.as_deref() {
+                Some(s) => PersonaStyle::parse(s),
+                None => PersonaStyle::Soft,
+            },
+            intensity: match self.intensity.as_deref() {
+                Some(s) => KawaiiIntensity::parse(s),
+                None => KawaiiIntensity::Normal,
+            },
+            custom_fallback: self.custom_fallback.clone(),
+            decorate_fallback: self.decorate_fallback.unwrap_or(true),
+        }
+    }
 }
 
 /// 引擎统计（shell 层补 `path`：native | wasm）。

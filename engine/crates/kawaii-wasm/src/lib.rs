@@ -275,6 +275,286 @@ pub extern "C" fn kawaii_get_stats() -> i32 {
     })
 }
 
+// ── P4 patch 级 API（与 napi 壳镜像；对象结果走 JSON 结果槽） ──
+
+use kawaii_core::dsl::EvalOptions;
+use kawaii_core::patch as core_patch;
+use kawaii_core::patch_new as core_new;
+use std::collections::HashMap;
+
+type RuleTable = HashMap<String, Vec<String>>;
+
+/// opts JSON → 求值选项（空/None → soft/normal/decorate=true 默认）。
+fn opts_eval(opts: Option<EngineOpts>) -> EvalOptions {
+    opts.unwrap_or_default().to_eval()
+}
+
+/// 规则表 JSON（`""` / `"null"` → 空表或 None）。
+unsafe fn parse_rules(
+    ptr: *const u8,
+    len: u32,
+) -> Result<RuleTable, String> {
+    if len == 0 {
+        return Ok(RuleTable::new());
+    }
+    let s = read_str(ptr, len)?;
+    serde_json::from_str(s).map_err(|e| format!("rules 不是合法 JSON: {e}"))
+}
+
+unsafe fn parse_optional_rules(
+    ptr: *const u8,
+    len: u32,
+) -> Result<Option<RuleTable>, String> {
+    if len == 0 {
+        return Ok(None);
+    }
+    let s = read_str(ptr, len)?;
+    if s.trim().is_empty() || s.trim() == "null" {
+        return Ok(None);
+    }
+    serde_json::from_str(s).map_err(|e| format!("rules 不是合法 JSON: {e}"))
+}
+
+fn json_result<T: serde::Serialize>(v: &T) -> i32 {
+    match serde_json::to_string(v) {
+        Ok(s) => set_result(s.into_bytes()),
+        Err(e) => set_err(format!("序列化失败: {e}")),
+    }
+}
+
+/// 占位符切分（TS `tokenize`；结果槽 = JSON 字符串数组）。
+#[no_mangle]
+pub unsafe extern "C" fn kawaii_tokenize(s_ptr: *const u8, s_len: u32) -> i32 {
+    let s = match read_str(s_ptr, s_len) {
+        Ok(s) => s,
+        Err(e) => return set_err(e),
+    };
+    json_result(&core_patch::tokenize(s))
+}
+
+/// 单条目转换（TS `transformValue`；结果槽 = `{value,kind}`）。
+#[no_mangle]
+pub unsafe extern "C" fn kawaii_transform_value(
+    value_ptr: *const u8,
+    value_len: u32,
+    _index: u32,
+    opts_ptr: *const u8,
+    opts_len: u32,
+) -> i32 {
+    let value = match read_str(value_ptr, value_len) {
+        Ok(s) => s,
+        Err(e) => return set_err(e),
+    };
+    let opts = match parse_opts(opts_ptr, opts_len) {
+        Ok(o) => o,
+        Err(e) => return set_err(e),
+    };
+    json_result(&core_patch::transform_value(value, &opts_eval(opts)))
+}
+
+/// 整段内容改写（TS `patchContent`；结果槽 = `{content,stats,changed}`）。
+#[no_mangle]
+pub unsafe extern "C" fn kawaii_patch_content(
+    content_ptr: *const u8,
+    content_len: u32,
+    opts_ptr: *const u8,
+    opts_len: u32,
+) -> i32 {
+    let content = match read_str(content_ptr, content_len) {
+        Ok(s) => s,
+        Err(e) => return set_err(e),
+    };
+    let opts = match parse_opts(opts_ptr, opts_len) {
+        Ok(o) => o,
+        Err(e) => return set_err(e),
+    };
+    json_result(&core_patch::patch_content(content, &opts_eval(opts)))
+}
+
+/// 统计文案（TS `formatStats`；stats JSON 入参）。
+#[no_mangle]
+pub unsafe extern "C" fn kawaii_format_stats(
+    stats_ptr: *const u8,
+    stats_len: u32,
+) -> i32 {
+    let s = match read_str(stats_ptr, stats_len) {
+        Ok(s) => s,
+        Err(e) => return set_err(e),
+    };
+    match serde_json::from_str::<core_patch::PatchStats>(s) {
+        Ok(stats) => set_result(core_patch::format_stats(&stats).into_bytes()),
+        Err(e) => set_err(format!("stats 不是合法 JSON: {e}")),
+    }
+}
+
+/// TS diag 表补丁（TS `patchTsDiag`）。
+#[no_mangle]
+pub unsafe extern "C" fn kawaii_patch_ts_diag(
+    content_ptr: *const u8,
+    content_len: u32,
+    rules_ptr: *const u8,
+    rules_len: u32,
+    opts_ptr: *const u8,
+    opts_len: u32,
+) -> i32 {
+    let content = match read_str(content_ptr, content_len) {
+        Ok(s) => s,
+        Err(e) => return set_err(e),
+    };
+    let rules = match parse_rules(rules_ptr, rules_len) {
+        Ok(r) => r,
+        Err(e) => return set_err(e),
+    };
+    let opts = match parse_opts(opts_ptr, opts_len) {
+        Ok(o) => o,
+        Err(e) => return set_err(e),
+    };
+    json_result(&core_new::patch_ts_diag(content, &rules, &opts_eval(opts)))
+}
+
+/// zh JSON 行补丁（TS `patchJsonObject`）。
+#[no_mangle]
+pub unsafe extern "C" fn kawaii_patch_json_object(
+    content_ptr: *const u8,
+    content_len: u32,
+    rules_ptr: *const u8,
+    rules_len: u32,
+    opts_ptr: *const u8,
+    opts_len: u32,
+) -> i32 {
+    let content = match read_str(content_ptr, content_len) {
+        Ok(s) => s,
+        Err(e) => return set_err(e),
+    };
+    let rules = match parse_rules(rules_ptr, rules_len) {
+        Ok(r) => r,
+        Err(e) => return set_err(e),
+    };
+    let opts = match parse_opts(opts_ptr, opts_len) {
+        Ok(o) => o,
+        Err(e) => return set_err(e),
+    };
+    json_result(&core_new::patch_json_object(content, &rules, &opts_eval(opts)))
+}
+
+/// 语言包 bundle 补丁（TS `patchPackBundle`）。
+#[no_mangle]
+pub unsafe extern "C" fn kawaii_patch_pack_bundle(
+    content_ptr: *const u8,
+    content_len: u32,
+    rules_ptr: *const u8,
+    rules_len: u32,
+    opts_ptr: *const u8,
+    opts_len: u32,
+) -> i32 {
+    let content = match read_str(content_ptr, content_len) {
+        Ok(s) => s,
+        Err(e) => return set_err(e),
+    };
+    let rules = match parse_rules(rules_ptr, rules_len) {
+        Ok(r) => r,
+        Err(e) => return set_err(e),
+    };
+    let opts = match parse_opts(opts_ptr, opts_len) {
+        Ok(o) => o,
+        Err(e) => return set_err(e),
+    };
+    json_result(&core_new::patch_pack_bundle(content, &rules, &opts_eval(opts)))
+}
+
+/// bundle 模板串补丁（TS `patchBundleTemplate`；rules 可为 null/缺省）。
+#[no_mangle]
+pub unsafe extern "C" fn kawaii_patch_bundle_template(
+    content_ptr: *const u8,
+    content_len: u32,
+    rules_ptr: *const u8,
+    rules_len: u32,
+    opts_ptr: *const u8,
+    opts_len: u32,
+) -> i32 {
+    let content = match read_str(content_ptr, content_len) {
+        Ok(s) => s,
+        Err(e) => return set_err(e),
+    };
+    let rules = match parse_optional_rules(rules_ptr, rules_len) {
+        Ok(r) => r,
+        Err(e) => return set_err(e),
+    };
+    let opts = match parse_opts(opts_ptr, opts_len) {
+        Ok(o) => o,
+        Err(e) => return set_err(e),
+    };
+    json_result(&core_new::patch_bundle_template(
+        content,
+        rules.as_ref(),
+        &opts_eval(opts),
+    ))
+}
+
+/// MarkdownLint + 指定规则表（TS `transformMarkdownlint`）。
+#[no_mangle]
+pub unsafe extern "C" fn kawaii_transform_markdownlint_rules(
+    msg_ptr: *const u8,
+    msg_len: u32,
+    rules_ptr: *const u8,
+    rules_len: u32,
+    opts_ptr: *const u8,
+    opts_len: u32,
+    code_ptr: *const u8,
+    code_len: u32,
+) -> i32 {
+    let msg = match read_str(msg_ptr, msg_len) {
+        Ok(s) => s,
+        Err(e) => return set_err(e),
+    };
+    let rules = match parse_rules(rules_ptr, rules_len) {
+        Ok(r) => r,
+        Err(e) => return set_err(e),
+    };
+    let opts = match parse_opts(opts_ptr, opts_len) {
+        Ok(o) => o,
+        Err(e) => return set_err(e),
+    };
+    let code = match read_optional_str(code_ptr, code_len) {
+        Ok(c) => c,
+        Err(e) => return set_err(e),
+    };
+    let out = core_new::transform_markdownlint(msg, &rules, &opts_eval(opts), code);
+    set_result(out.into_bytes())
+}
+
+/// PyLint + 指定规则表（TS `transformPylint`）。
+#[no_mangle]
+pub unsafe extern "C" fn kawaii_transform_pylint_rules(
+    msg_ptr: *const u8,
+    msg_len: u32,
+    rules_ptr: *const u8,
+    rules_len: u32,
+    opts_ptr: *const u8,
+    opts_len: u32,
+    code_ptr: *const u8,
+    code_len: u32,
+) -> i32 {
+    let msg = match read_str(msg_ptr, msg_len) {
+        Ok(s) => s,
+        Err(e) => return set_err(e),
+    };
+    let rules = match parse_rules(rules_ptr, rules_len) {
+        Ok(r) => r,
+        Err(e) => return set_err(e),
+    };
+    let opts = match parse_opts(opts_ptr, opts_len) {
+        Ok(o) => o,
+        Err(e) => return set_err(e),
+    };
+    let code = match read_optional_str(code_ptr, code_len) {
+        Ok(c) => c,
+        Err(e) => return set_err(e),
+    };
+    let out = core_new::transform_pylint(msg, &rules, &opts_eval(opts), code);
+    set_result(out.into_bytes())
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

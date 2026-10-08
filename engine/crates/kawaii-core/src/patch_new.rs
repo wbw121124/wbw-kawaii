@@ -12,7 +12,7 @@ use std::collections::HashMap;
 pub type RuleTable = HashMap<String, Vec<String>>;
 
 /// transform-new 的结果形状（stats 仅 hits/decorated）。
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Serialize)]
 pub struct NewPatchResult {
     pub content: String,
     pub hits: u32,

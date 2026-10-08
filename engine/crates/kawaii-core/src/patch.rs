@@ -7,7 +7,8 @@ use crate::persona::{get_fallback_suffix, should_skip_decorate};
 use sha2::{Digest, Sha256};
 
 /// 条目结果种类（对齐 TS `EntryKind`）。
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Serialize)]
+#[serde(rename_all = "lowercase")]
 pub enum EntryKind {
     Null,
     Hit,
@@ -31,14 +32,14 @@ impl EntryKind {
 }
 
 /// 单条目转换结果（TS `EntryResult`；`null` 条目 value 为 None）。
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, serde::Serialize)]
 pub struct EntryResult {
     pub value: Option<String>,
     pub kind: EntryKind,
 }
 
 /// patchContent 统计（TS `PatchStats`，字段名一致）。
-#[derive(Debug, Clone, Default, PartialEq, Eq)]
+#[derive(Debug, Clone, Default, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 pub struct PatchStats {
     pub total: u32,
     pub nulls: u32,
@@ -51,7 +52,7 @@ pub struct PatchStats {
 }
 
 /// patchContent 结果（TS `PatchResult`）。
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Serialize)]
 pub struct PatchResult {
     pub content: String,
     pub stats: PatchStats,

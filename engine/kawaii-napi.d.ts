@@ -15,6 +15,15 @@ export interface EngineOptsJs {
   decorateFallback?: boolean
 }
 
+/** 单条目结果（TS `EntryResult`；null 条目 value 为 null）。 */
+export interface EntryResultJs {
+  value?: string
+  kind: string
+}
+
+/** 统计文案（TS `formatStats`）。 */
+export declare function formatStats(stats: PatchStatsJs): string
+
 /** 引擎统计（含规则版本与规则数）。 */
 export declare function getStats(): StatsJs
 
@@ -24,6 +33,48 @@ export declare function loadRules(source: string): string
 /** 直接加载规则 DSL 文本（浏览器端 file: 由调用方先取文本）。 */
 export declare function loadRulesText(text: string): string
 
+/** transform-new 系列结果（stats 仅 hits/decorated，与 TS 返回形状一致）。 */
+export interface NewPatchResultJs {
+  content: string
+  hits: number
+  decorated: number
+  changed: boolean
+}
+
+/** bundle 模板串补丁（TS `patchBundleTemplate`；rules 参数 TS 内未使用，此处仅兼容签名）。 */
+export declare function patchBundleTemplate(content: string, rules?: RuleTable | undefined | null, opts?: EngineOptsJs | undefined | null): NewPatchResultJs
+
+/** 整段内容改写（TS `patchContent`）。 */
+export declare function patchContent(content: string, opts?: EngineOptsJs | undefined | null): PatchResultJs
+
+/** zh JSON 行补丁（TS `patchJsonObject`）。 */
+export declare function patchJsonObject(content: string, rules: RuleTable, opts?: EngineOptsJs | undefined | null): NewPatchResultJs
+
+/** 语言包 bundle 补丁（TS `patchPackBundle`；解析失败回落 patchJsonObject）。 */
+export declare function patchPackBundle(content: string, rules: RuleTable, opts?: EngineOptsJs | undefined | null): NewPatchResultJs
+
+/** patchContent 结果。 */
+export interface PatchResultJs {
+  content: string
+  stats: PatchStatsJs
+  changed: boolean
+}
+
+/** patchContent 统计（8 字段，字段名与 TS 一致）。 */
+export interface PatchStatsJs {
+  total: number
+  nulls: number
+  hits: number
+  decorated: number
+  identity: number
+  kept: number
+  already: number
+  changed: number
+}
+
+/** TS diag 表补丁（TS `patchTsDiag`，含原样保留的命中重建分支）。 */
+export declare function patchTsDiag(content: string, rules: RuleTable, opts?: EngineOptsJs | undefined | null): NewPatchResultJs
+
 /** 统计对象（path 固定 native，wasm 壳镜像为 wasm）。 */
 export interface StatsJs {
   path: string
@@ -32,14 +83,26 @@ export interface StatsJs {
   ruleCount: number
 }
 
+/** 占位符切分（TS `tokenize`）。 */
+export declare function tokenize(s: string): Array<string>
+
 /** MarkdownLint 消息（结构化兜底保留前缀/详情）。 */
 export declare function transformMarkdownlint(msg: string, opts?: EngineOptsJs | undefined | null, code?: string | undefined | null): string
+
+/** MarkdownLint 消息 + 指定规则表（TS `transformMarkdownlint`；data 表恒从 JS 传入）。 */
+export declare function transformMarkdownlintWithRules(msg: string, rules: RuleTable, opts?: EngineOptsJs | undefined | null, code?: string | undefined | null): string
 
 /** 消息主入口。 */
 export declare function transformMessage(msg: string, opts?: EngineOptsJs | undefined | null): string
 
 /** PyLint 消息（结构化兜底保留规则码前缀）。 */
 export declare function transformPylint(msg: string, opts?: EngineOptsJs | undefined | null, code?: string | undefined | null): string
+
+/** PyLint 消息 + 指定规则表（TS `transformPylint`）。 */
+export declare function transformPylintWithRules(msg: string, rules: RuleTable, opts?: EngineOptsJs | undefined | null, code?: string | undefined | null): string
+
+/** 单条目转换（TS `transformValue(value, index, opts)`；index 仅兼容签名，不参与选变体）。 */
+export declare function transformValue(value: string, index: number, opts?: EngineOptsJs | undefined | null): EntryResultJs
 
 /** 颤音彩蛋：命中关键词返回彩蛋文案，否则空串。 */
 export declare function transformWhimper(input: string, opts?: EngineOptsJs | undefined | null): string

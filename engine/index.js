@@ -29,6 +29,19 @@ function wrapNative(mod) {
     cyclePersona: () => mod.cyclePersona(),
     getStats: () => mod.getStats(),
     engineInfo: () => mod.engineInfo(),
+    // ── P4 patch 级 API ──
+    tokenize: (s) => mod.tokenize(s),
+    transformValue: (value, index, opts) => mod.transformValue(value, index, opts),
+    patchContent: (content, opts) => mod.patchContent(content, opts),
+    formatStats: (stats) => mod.formatStats(stats),
+    patchTsDiag: (content, rules, opts) => mod.patchTsDiag(content, rules, opts),
+    patchJsonObject: (content, rules, opts) => mod.patchJsonObject(content, rules, opts),
+    patchPackBundle: (content, rules, opts) => mod.patchPackBundle(content, rules, opts),
+    patchBundleTemplate: (content, rules, opts) => mod.patchBundleTemplate(content, rules, opts),
+    transformMarkdownlintWithRules: (msg, rules, opts, code) =>
+      mod.transformMarkdownlintWithRules(msg, rules, opts, code),
+    transformPylintWithRules: (msg, rules, opts, code) =>
+      mod.transformPylintWithRules(msg, rules, opts, code),
   };
 }
 
