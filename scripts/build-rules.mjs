@@ -342,9 +342,30 @@ function qualityReport(entries, scope) {
     }
   }
   const pairTotal = structDiff + structSame;
-  console.log(`[${scope}] 变体总数=${totalV}, 模板结尾率=${(templateCount/totalV*100).toFixed(1)}%, 结构差异率=${pairTotal?((structDiff/pairTotal)*100).toFixed(1):0}%`);
+  const templateRate = totalV ? (templateCount / totalV) * 100 : 0;
+  const structDiffRate = pairTotal ? (structDiff / pairTotal) * 100 : 0;
+  console.log(`[${scope}] 变体总数=${totalV}, 模板结尾率=${templateRate.toFixed(1)}%, 结构差异率=${structDiffRate.toFixed(1)}%`);
+  return { templateRate, structDiffRate };
 }
-qualityReport(tsEntries.concat(tsCurateEntries), 'TS');
+const quality = qualityReport(tsEntries.concat(tsCurateEntries), 'TS');
+
+// 质量门禁（--check）：模板率过高 / 结构差异不足时让 CI 失败
+if (process.argv.includes('--check')) {
+  const TEMPLATE_MAX = 40;
+  const STRUCT_MIN = 70;
+  const problems = [];
+  if (!(quality.templateRate <= TEMPLATE_MAX)) {
+    problems.push(`模板结尾率 ${quality.templateRate.toFixed(1)}% > ${TEMPLATE_MAX}%`);
+  }
+  if (!(quality.structDiffRate >= STRUCT_MIN)) {
+    problems.push(`结构差异率 ${quality.structDiffRate.toFixed(1)}% < ${STRUCT_MIN}%`);
+  }
+  if (problems.length > 0) {
+    console.error(`[build] 质量门禁未通过: ${problems.join('；')}`);
+    process.exit(1);
+  }
+  console.log(`[build] 质量门禁通过: 模板率 ${quality.templateRate.toFixed(1)}% <= ${TEMPLATE_MAX}%, 结构差异率 ${quality.structDiffRate.toFixed(1)}% >= ${STRUCT_MIN}%`);
+}
 
 console.log('\ncpptools 覆盖率（按原文文本精确命中规则表的非 null 条目占比）:');
 for (const ver of COVERAGE) {

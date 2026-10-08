@@ -27,8 +27,8 @@ jobs:
       - name: Fetch baselines
         run: npm run fetch-baseline
 
-      - name: Build rules
-        run: npm run build:rules
+      - name: Build rules（含质量门禁：模板率 <= 40%，结构差异率 >= 70%）
+        run: npm run build:rules:check
 
       - name: Check generated rules in sync
         run: git diff --exit-code src/rules.generated.ts
