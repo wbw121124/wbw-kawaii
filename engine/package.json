@@ -5,14 +5,26 @@
   "license": "MIT",
   "main": "index.js",
   "types": "index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./index.d.ts",
+      "require": "./index.js",
+      "default": "./index.js"
+    },
+    "./wasm": {
+      "types": "./glue.d.ts",
+      "import": "./glue.mjs",
+      "default": "./glue.mjs"
+    }
+  },
   "napi": {
     "binaryName": "kawaii-engine"
   },
   "scripts": {
-    "build": "napi build --release --package kawaii-napi --output-dir .",
-    "build:debug": "napi build --package kawaii-napi --output-dir .",
+    "build": "napi build --release --package kawaii-napi --output-dir . --dts kawaii-napi.d.ts",
+    "build:debug": "napi build --package kawaii-napi --output-dir . --dts kawaii-napi.d.ts",
     "build:wasm": "cargo build --release --target wasm32-unknown-unknown -p kawaii-wasm",
-    "test": "node test/smoke.cjs && node test/smoke-wasm.cjs"
+    "test": "node test/smoke.cjs && node test/smoke-wasm.cjs && node test/parity.cjs"
   },
   "devDependencies": {
     "@napi-rs/cli": "^3.0.0"
@@ -20,6 +32,10 @@
   "files": [
     "index.js",
     "index.d.ts",
+    "glue.mjs",
+    "glue.d.ts",
+    "kawaii-napi.d.ts",
+    "kawaii_wasm.wasm",
     "*.node"
   ],
   "engines": {

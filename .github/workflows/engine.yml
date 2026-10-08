@@ -21,10 +21,12 @@ jobs:
       - uses: actions/checkout@v4
 
       - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
 
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: npm
           cache-dependency-path: engine/package-lock.json
 
@@ -37,8 +39,11 @@ jobs:
       - name: Build native addon
         run: npm run build
 
-      - name: Smoke native
-        run: node test/smoke.cjs
+      - name: Build wasm
+        run: npm run build:wasm
+
+      - name: Smoke + parity (native ↔ wasm)
+        run: npm test
 
   wasm:
     name: wasm32
@@ -56,7 +61,7 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
 
       - name: Build wasm
         run: cargo build --release --target wasm32-unknown-unknown -p kawaii-wasm

@@ -83,10 +83,10 @@ pub fn transform(original: &str, rules: &RuleSet, opts: &EvalOptions) -> Transfo
         let suffix = get_fallback_suffix(opts.persona, opts.custom_fallback.as_deref());
         if !suffix.is_empty()
             && !should_skip_decorate(original, opts.intensity)
-            && original.chars().count() > 3
             && !original.ends_with(&suffix)
         {
-            let cand = format!("{}{}", out, suffix);
+            // 对齐 TS transformValue：尾部空白修剪后再挂后缀
+            let cand = format!("{}{}", out.trim_end(), suffix);
             if cst::placeholders_unchanged(original, &cand) {
                 out = cand;
                 fell_back = true;

@@ -1,0 +1,32 @@
+// 内置结构规则（P3 起步集；0.9.0 语料编译成 .kawaii 后在此扩充）
+namespace builtin;
+
+rule "not-defined" priority 20 {
+  match { text_contains("is not defined") }
+  rewrite {
+    replace_text("is not defined", "不存在啦");
+  }
+}
+
+rule "module-not-found" priority 20 {
+  match { text_contains("Cannot find module") }
+  rewrite {
+    replace_text("Cannot find module", "找不到模块");
+  }
+}
+
+rule "econnrefused" priority 15 {
+  match { text_contains("ECONNREFUSED") }
+  rewrite {
+    replace_text("ECONNREFUSED", "连接被拒");
+  }
+}
+
+rule "question-persona" priority 10 {
+  match {
+    clause_ends_with("?") || clause_ends_with("？")
+  }
+  rewrite {
+    append_persona();
+  }
+}

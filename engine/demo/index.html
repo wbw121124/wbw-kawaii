@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>kawaii engine · wasm demo</title>
+<style>
+  :root { color-scheme: light dark; }
+  body { font: 14px/1.6 system-ui, "Segoe UI", sans-serif; max-width: 780px; margin: 2rem auto; padding: 0 1rem; }
+  h1 { font-size: 1.25rem; }
+  textarea { width: 100%; min-height: 5.5rem; box-sizing: border-box; font: inherit; }
+  .row { display: flex; gap: .75rem; flex-wrap: wrap; margin: .6rem 0; align-items: center; }
+  label { display: flex; gap: .35rem; align-items: center; }
+  button { font: inherit; padding: .35rem 1.1rem; cursor: pointer; }
+  section { border: 1px solid color-mix(in srgb, currentColor 25%, transparent); border-radius: 8px; padding: .6rem .8rem; margin-top: .8rem; }
+  section h2 { font-size: .85rem; margin: 0 0 .35rem; opacity: .7; }
+  pre { margin: 0; white-space: pre-wrap; word-break: break-all; }
+  #stats { opacity: .65; font-size: .8rem; }
+  #err { color: #c62828; white-space: pre-wrap; }
+</style>
+</head>
+<body>
+<h1>kawaii engine · engine.wasm 直连（无 .node）</h1>
+<p id="stats">加载中…</p>
+
+<div class="row">
+  <label>人设
+    <select id="persona">
+      <option value="">（默认）</option>
+      <option value="soft">soft</option>
+      <option value="tsundere">tsundere</option>
+      <option value="derriere">derriere</option>
+      <option value="cool">cool</option>
+    </select>
+  </label>
+  <label>强度
+    <select id="intensity">
+      <option value="">（默认）</option>
+      <option value="subtle">subtle</option>
+      <option value="normal">normal</option>
+      <option value="bold">bold</option>
+    </select>
+  </label>
+  <label><input type="checkbox" id="decorate" checked> decorateFallback</label>
+</div>
+
+<textarea id="input" spellcheck="false">are you ok?</textarea>
+<div class="row">
+  <button id="run">转换</button>
+  <button id="cycle">轮转人设</button>
+  <button id="builtin">载入内置规则</button>
+</div>
+<pre id="err"></pre>
+
+<section><h2>transformMessage</h2><pre id="out-msg">—</pre></section>
+<section><h2>transformMarkdownlint</h2><pre id="out-md">—</pre></section>
+<section><h2>transformPylint</h2><pre id="out-py">—</pre></section>
+
+<script type="module">
+import { createWasmEngine } from '../glue.mjs';
+
+const $ = (id) => document.getElementById(id);
+const engine = await createWasmEngine(
+  new URL('../../target/wasm32-unknown-unknown/release/kawaii_wasm.wasm', import.meta.url),
+);
+
+function opts() {
+  const o = {};
+  if ($('persona').value) o.personaStyle = $('persona').value;
+  if ($('intensity').value) o.intensity = $('intensity').value;
+  o.decorateFallback = $('decorate').checked;
+  return o;
+}
+
+function showStats() {
+  const s = engine.getStats();
+  $('stats').textContent =
+    `path=${s.path} · rules=${s.rulesVersion} (${s.ruleCount}) · persona=${s.persona}`;
+}
+
+function run() {
+  $('err').textContent = '';
+  try {
+    const text = $('input').value;
+    const o = opts();
+    $('out-msg').textContent = engine.transformMessage(text, o);
+    $('out-md').textContent = engine.transformMarkdownlint('MD013: Line too long [121 > 80]', o);
+    $('out-py').textContent = engine.transformPylint('Missing module docstring', o);
+    showStats();
+  } catch (e) {
+    $('err').textContent = String(e && e.message ? e.message : e);
+  }
+}
+
+$('run').addEventListener('click', run);
+$('cycle').addEventListener('click', () => {
+  engine.cyclePersona();
+  $('persona').value = '';
+  run();
+});
+$('builtin').addEventListener('click', () => {
+  engine.loadRules('builtin');
+  run();
+});
+run();
+</script>
+</body>
+</html>

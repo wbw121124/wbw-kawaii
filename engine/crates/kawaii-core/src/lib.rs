@@ -2,11 +2,15 @@
 //!
 //! - `cst`：消息 lossless 解析 + 占位符不变量（P1）；
 //! - `dsl`：规则 DSL 无损解析与求值（P2）；
-//! - `persona`：人设 / 强度（与 TS 对齐）。
+//! - `persona`：人设 / 强度（与 TS 对齐）；
+//! - `jsonlite`：扁平 opts JSON 解析（零依赖）；
+//! - `engine`：有状态门面（规则热加载 / 人设轮转 / 统计，napi+wasm 镜像）。
 #![deny(warnings)]
 
 pub mod cst;
 pub mod dsl;
+pub mod engine;
+pub mod jsonlite;
 pub mod persona;
 
 /// 引擎版本（与 workspace 同步）。
