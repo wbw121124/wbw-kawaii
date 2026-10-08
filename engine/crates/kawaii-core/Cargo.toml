@@ -10,3 +10,5 @@ name = "kawaii_core"
 
 [dependencies]
 rowan = "0.17.0"
+sha2 = "0.10"
+serde_json = { version = "1", features = ["preserve_order"] }
