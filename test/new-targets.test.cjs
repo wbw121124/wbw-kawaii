@@ -29,13 +29,13 @@ test('patchJsonObject: 命中替换 + 兜底后缀 + 保持结构', () => {
   const { patchJsonObject } = require('../out/transform-new.js');
   const rules = { key_a: ['替代文案A', '替代文案B'] };
   const content = '{\n  "key_a": "原文案",\n  "key_b": "无规则文案",\n  "key_c": null\n}\n';
-  const res = patchJsonObject(content, rules);
+  const res = patchJsonObject(content, rules, { personaStyle: 'soft', intensity: 'normal', customFallback: ' 喵~' });
   assert.strictEqual(res.changed, true);
   assert.ok(res.content.includes('替代文案'), '应替换命中文案');
   assert.ok(res.content.includes('无规则文案 喵~'), '应兜底追加后缀');
   assert.ok(res.content.includes('null'), 'null 值应保留');
   // 幂等
-  const res2 = patchJsonObject(res.content, rules);
+  const res2 = patchJsonObject(res.content, rules, { personaStyle: 'soft', intensity: 'normal', customFallback: ' 喵~' });
   assert.strictEqual(res2.changed, false, '二次改写不应变化');
 });
 
@@ -51,7 +51,7 @@ test('patchPackBundle: 只动 contents.bundle，license/version 字节不动', (
   assert.ok(res.content.includes('"":"license"'), 'license 不应变化');
   assert.ok(res.content.includes('key_b'), '无规则 key 也应被兜底');
   // 幂等
-  const res2 = patchPackBundle(res.content, rules);
+  const res2 = patchPackBundle(res.content, rules, { personaStyle: 'soft', intensity: 'normal' });
   assert.strictEqual(res2.changed, false, '二次改写不应变化');
 });
 
@@ -59,11 +59,11 @@ test('patchPackBundle: 只动 contents.bundle，license/version 字节不动', (
 test('patchBundleTemplate: 模板串加后缀，已打过则跳过', () => {
   const { patchBundleTemplate } = require('../out/transform-new.js');
   const content = 'l10n.t("other") + `Unknown at rule @${name}`;';
-  const res = patchBundleTemplate(content, ' 喵~');
+  const res = patchBundleTemplate(content, null, { personaStyle: 'soft', intensity: 'normal', customFallback: ' 喵~' });
   assert.strictEqual(res.changed, true);
   assert.ok(res.content.includes('Unknown at rule @${name} 喵~'), '应追加后缀');
   // 幂等
-  const res2 = patchBundleTemplate(res.content, ' 喵~');
+  const res2 = patchBundleTemplate(res.content, null, { personaStyle: 'soft', intensity: 'normal', customFallback: ' 喵~' });
   assert.strictEqual(res2.changed, false, '二次改写不应变化');
 });
 
@@ -133,15 +133,15 @@ test('transformMarkdownlint: 命中规则替换 description', () => {
 test('transformMarkdownlint: 无规则兜底后缀', () => {
   const { transformMarkdownlint } = require('../out/transform-new.js');
   assert.strictEqual(
-    transformMarkdownlint('MD999: Unknown rule', {}),
-    'MD999: Unknown rule 喵~'
+    transformMarkdownlint('MD999: Unknown rule', {}, { personaStyle: 'soft', intensity: 'normal' }),
+    'MD999: Unknown rule  ~'
   );
 });
 
 test('transformMarkdownlint: 已带后缀不重复', () => {
   const { transformMarkdownlint } = require('../out/transform-new.js');
   assert.strictEqual(
-    transformMarkdownlint('MD001: heading 喵~', {}),
+    transformMarkdownlint('MD001: heading 喵~', {}, { personaStyle: 'soft', intensity: 'normal', customFallback: ' 喵~' }),
     'MD001: heading 喵~'
   );
 });
@@ -159,8 +159,8 @@ test('transformPylint: 命中规则替换 description', () => {
 test('transformPylint: 无规则兜底后缀', () => {
   const { transformPylint } = require('../out/transform-new.js');
   assert.strictEqual(
-    transformPylint('Z9999: Unknown', {}),
-    'Z9999: Unknown 喵~'
+    transformPylint('Z9999: Unknown', {}, { personaStyle: 'soft', intensity: 'normal' }),
+    'Z9999: Unknown  ~'
   );
 });
 

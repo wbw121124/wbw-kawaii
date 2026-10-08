@@ -166,7 +166,7 @@ export class KawaiiPatcher {
           res = patchPackBundle(input, require('./rules.generated').PACK_RULES);
           break;
         case 'bundleTemplate':
-          res = patchBundleTemplate(input, ' 喵~');
+          res = patchBundleTemplate(input, null, opts);
           break;
         default:
           this.log(`[${t.id}] 未知目标类型 ${t.kind}`);
