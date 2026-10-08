@@ -46,6 +46,18 @@ impl ParsedMessage {
             .collect()
     }
 
+    /// 子句文本列表（保留子句内部原文，供 `clause_ends_with` 匹配）。
+    pub fn clause_texts(&self) -> Vec<String> {
+        self.clauses()
+            .iter()
+            .map(|c| {
+                let mut s = String::new();
+                collect_text(c, &mut s);
+                s
+            })
+            .collect()
+    }
+
     /// 消息级规则码前缀（如 `TS2345:`、`MD013`）是否存在。
     pub fn has_code_prefix(&self) -> bool {
         self.root
