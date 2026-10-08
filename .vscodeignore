@@ -7,3 +7,6 @@ test/**
 src/**
 tsconfig.json
 **/*.map
+engine/**
+.opencode/**
+plan.md

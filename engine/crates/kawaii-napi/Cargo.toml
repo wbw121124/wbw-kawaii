@@ -1,0 +1,17 @@
+[package]
+name = "kawaii-napi"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "可爱化引擎 N-API 薄壳（.node）"
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+kawaii-core = { path = "../kawaii-core" }
+napi = { version = "3" }
+napi-derive = { version = "3" }
+
+[build-dependencies]
+napi-build = { version = "2" }

@@ -1,0 +1,65 @@
+name: engine
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  native:
+    name: native (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        shell: bash
+        working-directory: engine
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: engine/package-lock.json
+
+      - name: Cargo test
+        run: cargo test --workspace
+
+      - name: Install deps
+        run: npm ci
+
+      - name: Build native addon
+        run: npm run build
+
+      - name: Smoke native
+        run: node test/smoke.cjs
+
+  wasm:
+    name: wasm32
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
+        working-directory: engine
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Build wasm
+        run: cargo build --release --target wasm32-unknown-unknown -p kawaii-wasm
+
+      - name: Smoke wasm
+        run: node test/smoke-wasm.cjs

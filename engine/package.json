@@ -1,0 +1,28 @@
+{
+  "name": "@wbw/kawaii-engine",
+  "version": "0.1.0",
+  "description": "通用可爱化引擎：Rust 核心 + N-API/wasm 双产物",
+  "license": "MIT",
+  "main": "index.js",
+  "types": "index.d.ts",
+  "napi": {
+    "binaryName": "kawaii-engine"
+  },
+  "scripts": {
+    "build": "napi build --release --package kawaii-napi --output-dir .",
+    "build:debug": "napi build --package kawaii-napi --output-dir .",
+    "build:wasm": "cargo build --release --target wasm32-unknown-unknown -p kawaii-wasm",
+    "test": "node test/smoke.cjs && node test/smoke-wasm.cjs"
+  },
+  "devDependencies": {
+    "@napi-rs/cli": "^3.0.0"
+  },
+  "files": [
+    "index.js",
+    "index.d.ts",
+    "*.node"
+  ],
+  "engines": {
+    "node": ">=18"
+  }
+}

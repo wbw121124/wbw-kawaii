@@ -1,0 +1,8 @@
+# Windows gnu 工具链静态链接运行时，保证 .node 脱离 MinGW DLL 也能加载
+[target.x86_64-pc-windows-gnu]
+rustflags = ["-C", "target-feature=+crt-static"]
+
+# napi-build 的 setup_gnu 需要 LIBNODE_PATH 指向含 libnode.dll 的目录
+# （vendor/win32-gnu 是从本机 node.exe 导出表生成的导入库，LIBRARY=node.exe，无运行时额外依赖）
+[env]
+LIBNODE_PATH = { value = "vendor/win32-gnu", relative = true }

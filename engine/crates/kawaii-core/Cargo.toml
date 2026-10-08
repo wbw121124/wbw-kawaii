@@ -1,0 +1,9 @@
+[package]
+name = "kawaii-core"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "可爱化引擎纯 Rust 核心（消息 CST / 规则 DSL / 求值）"
+
+[lib]
+name = "kawaii_core"

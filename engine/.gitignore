@@ -1,0 +1,7 @@
+node_modules/
+target/
+*.node
+pkg/
+crates/*/index.d.ts
+*.exp
+

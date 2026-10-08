@@ -1,0 +1,13 @@
+[package]
+name = "kawaii-wasm"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "可爱化引擎 wasm 薄壳（浏览器 / Node 中间回退层）"
+
+[lib]
+name = "kawaii_wasm"
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+kawaii-core = { path = "../kawaii-core" }
