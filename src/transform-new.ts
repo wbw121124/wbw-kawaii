@@ -1,6 +1,5 @@
 // 纯文本改写核心（不含 vscode 依赖）：TS diag 表 / zh JSON / 语言包 bundle / bundle 模板串补丁
 // 供 patcher.ts 调用 + 单独测试使用。
-import * as crypto from 'crypto';
 import { getFallbackSuffix, shouldSkipDecorate, KawaiiOptions } from './kawaii-options';
 import { pickVariant } from './variant-picker';
 
@@ -166,46 +165,62 @@ export function patchBundleTemplate(
   return { content: result, stats: { hits, decorated }, changed };
 }
 
-// MarkdownLint 消息变换：按 ruleCode 查规则表，变 description 部分
-// 消息格式："MD013" 或 "MD001/atx: heading style"
+// MarkdownLint 消息变换。
+// markdownlint-vscode 实际消息格式："MD013/line-length: Line too long [121 > 80]"
+// （即 ruleNames.join("/") + ": " + description，errorDetail 追加 " [detail]"）。
+// 规则表（MARKDOWNLINT_RULES）键为英文描述，也兼容规则码键（测试/自定义）；
+// 无前缀的纯描述消息通过 code 参数（diagnostic.code，如 "MD013"）命中。
 export function transformMarkdownlint(
   message: string,
   rules: Record<string, string[]>,
-  opts?: KawaiiOptions
+  opts?: KawaiiOptions,
+  code?: string
 ): string {
   const o = getOpts(opts);
   const suffix = getFallbackSuffix(o);
   const m = message.match(/^([A-Z]{2}\d{3}(?:\/[\w-]+)?):\s*(.*)$/);
-  if (!m) return message;
-  const [, code, desc] = m;
-  const variants = rules[code];
+  const prefix = m ? m[1] : '';
+  const desc = m ? m[2] : message;
+  const codeKey = (code ?? prefix).split('/')[0];
+  const detailMatch = desc.match(/\s\[[^\]]*\]$/);
+  const detail = detailMatch ? detailMatch[0] : '';
+  const lookup = detail ? desc.slice(0, -detail.length) : desc;
+  const variants = (codeKey && rules[codeKey]) || rules[lookup] || rules[desc];
   if (variants && variants.length > 0) {
-    return `${code}: ${pickVariant(variants, code)}`;
+    const picked = pickVariant(variants, codeKey || lookup);
+    return prefix ? `${prefix}: ${picked}${detail}` : `${picked}${detail}`;
   }
-  if (desc.trim() && !desc.endsWith(suffix)) {
-    return `${code}: ${desc} ${suffix}`;
+  if (lookup.trim() && !lookup.endsWith(suffix)) {
+    const next = `${lookup}${detail}${suffix}`;
+    return prefix ? `${prefix}: ${next}` : next;
   }
   return message;
 }
 
-// PyLint 消息变换：按 msg_id 查规则表，变 description 部分
-// 消息格式："C0114: Missing module docstring"
+// PyLint 消息变换。
+// vscode-pylint 消息通常无前缀（如 "Missing module docstring"），
+// 规则码在 diagnostic.code（"C0114" 或 "missing-module-docstring"）；
+// 兼容 "C0114: Missing module docstring" 带前缀格式。未命中则追加人设后缀。
 export function transformPylint(
   message: string,
   rules: Record<string, string[]>,
-  opts?: KawaiiOptions
+  opts?: KawaiiOptions,
+  code?: string
 ): string {
   const o = getOpts(opts);
   const suffix = getFallbackSuffix(o);
   const m = message.match(/^([A-Za-z]\d{4}):?\s*(.*)$/);
-  if (!m) return message;
-  const [, code, desc] = m;
-  const variants = rules[code];
+  const prefix = m ? m[1] : '';
+  const desc = m ? m[2] : message;
+  const codeKey = code || prefix;
+  const variants = codeKey ? rules[codeKey] : undefined;
   if (variants && variants.length > 0) {
-    return `${code}: ${pickVariant(variants, code)}`;
+    const picked = pickVariant(variants, codeKey);
+    return prefix ? `${prefix}: ${picked}` : picked;
   }
   if (desc.trim() && !desc.endsWith(suffix)) {
-    return `${code}: ${desc} ${suffix}`;
+    const next = `${desc}${suffix}`;
+    return prefix ? `${prefix}: ${next}` : next;
   }
   return message;
 }

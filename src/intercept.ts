@@ -5,7 +5,7 @@
 let _vscode: any = null;
 try { _vscode = require('vscode'); } catch {}
 
-export type MessageTransformFn = (source: string, message: string) => string;
+export type MessageTransformFn = (source: string, message: string, code?: string) => string;
 
 const PATCHED_SYMBOL = Symbol('wbw-kawaii-patched');
 
@@ -62,7 +62,19 @@ function transformDiagnostics(
 ): void {
   for (const d of diags) {
     if (d?.source?.toLowerCase().includes(source.toLowerCase()) && typeof d.message === 'string') {
-      d.message = transformFn(source, d.message);
+      d.message = transformFn(source, d.message, normalizeCode(d?.code));
     }
   }
+}
+
+// diagnostic.code 可能是 string | number | { value, target }，统一成字符串
+function normalizeCode(code: unknown): string | undefined {
+  if (typeof code === 'string') return code;
+  if (typeof code === 'number') return String(code);
+  if (code && typeof code === 'object') {
+    const v = (code as any).value;
+    if (typeof v === 'string') return v;
+    if (typeof v === 'number') return String(v);
+  }
+  return undefined;
 }

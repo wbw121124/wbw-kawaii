@@ -81,14 +81,14 @@ export class KawaiiPatcher {
     // ===== 运行时拦截：markdownlint / pylint DiagnosticCollection =====
     if (isZhCn && cfg.get<boolean>('enableMarkdownlint', true)) {
       
-      interceptDiagnosticCollection('markdownlint', (source, message) =>
-        transformMarkdownlint(message, MARKDOWNLINT_RULES));
+      interceptDiagnosticCollection('markdownlint', (source, message, code) =>
+        transformMarkdownlint(message, MARKDOWNLINT_RULES, opts, code));
       this.log('[markdownlint] 运行时拦截已激活');
     }
     if (isZhCn && cfg.get<boolean>('enablePylint', true)) {
       
-      interceptDiagnosticCollection('PyLinter', (source, message) =>
-        transformPylint(message, PACK_RULES));
+      interceptDiagnosticCollection('PyLinter', (source, message, code) =>
+        transformPylint(message, PACK_RULES, opts, code));
       this.log('[pylint] 运行时拦截已激活');
     }
 

@@ -134,7 +134,7 @@ test('transformMarkdownlint: 无规则兜底后缀', () => {
   const { transformMarkdownlint } = require('../out/transform-new.js');
   assert.strictEqual(
     transformMarkdownlint('MD999: Unknown rule', {}, { personaStyle: 'soft', intensity: 'normal' }),
-    'MD999: Unknown rule  ~'
+    'MD999: Unknown rule ~'
   );
 });
 
@@ -160,7 +160,7 @@ test('transformPylint: 无规则兜底后缀', () => {
   const { transformPylint } = require('../out/transform-new.js');
   assert.strictEqual(
     transformPylint('Z9999: Unknown', {}, { personaStyle: 'soft', intensity: 'normal' }),
-    'Z9999: Unknown  ~'
+    'Z9999: Unknown ~'
   );
 });
 
@@ -170,3 +170,49 @@ test('interceptDiagnosticCollection: 不重复注册同一 source', () => {
   // 已在 module scope 注册过 → 幂等（不抛出即可）
   assert.doesNotThrow(() => interceptDiagnosticCollection('markdownlint', () => 'x'));
 });
+
+// ========== 运行时拦截真实消息格式（markdownlint-vscode / vscode-pylint） ==========
+test('transformMarkdownlint: alias/详情消息按英文描述命中', () => {
+  const { transformMarkdownlint } = require('../out/transform-new.js');
+  const rules = { 'Line too long': ['行太长了喵~'] };
+  assert.strictEqual(
+    transformMarkdownlint('MD013/line-length: Line too long [121 > 80]', rules),
+    'MD013/line-length: 行太长了喵~ [121 > 80]'
+  );
+});
+
+test('transformMarkdownlint: 无前缀消息按 diagnostic.code 命中', () => {
+  const { transformMarkdownlint } = require('../out/transform-new.js');
+  const rules = { MD013: ['行太长了喵~'] };
+  assert.strictEqual(
+    transformMarkdownlint('Line too long', rules, undefined, 'MD013'),
+    '行太长了喵~'
+  );
+});
+
+test('transformMarkdownlint: 未命中时详情后保留、后缀加在末尾', () => {
+  const { transformMarkdownlint } = require('../out/transform-new.js');
+  assert.strictEqual(
+    transformMarkdownlint('MD013/line-length: Line too long [999 > 80]', {}, { personaStyle: 'soft', intensity: 'normal' }),
+    'MD013/line-length: Line too long [999 > 80] ~'
+  );
+});
+
+test('transformPylint: 无前缀消息兜底后缀', () => {
+  const { transformPylint } = require('../out/transform-new.js');
+  assert.strictEqual(
+    transformPylint('Missing module docstring', {}, { personaStyle: 'soft', intensity: 'normal' }),
+    'Missing module docstring ~'
+  );
+});
+
+test('transformPylint: 无前缀消息按 diagnostic.code 命中', () => {
+  const { transformPylint } = require('../out/transform-new.js');
+  const rules = { 'missing-module-docstring': ['缺少模块文档喵~'] };
+  assert.strictEqual(
+    transformPylint('Missing module docstring', rules, undefined, 'missing-module-docstring'),
+    '缺少模块文档喵~'
+  );
+});
+
+
