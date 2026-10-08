@@ -2,17 +2,12 @@
 // 供 patcher.ts 调用 + 单独测试使用。
 import * as crypto from 'crypto';
 import { getFallbackSuffix, shouldSkipDecorate, KawaiiOptions } from './kawaii-options';
+import { pickVariant } from './variant-picker';
 
 const DEFAULT_OPTS: KawaiiOptions = { personaStyle: 'soft', intensity: 'normal' };
 
 function getOpts(opts: KawaiiOptions | undefined): KawaiiOptions {
   return opts ?? DEFAULT_OPTS;
-}
-
-function pickVariant(variants: string[], key: string): string {
-  const h = crypto.createHash('sha256').update(key).digest();
-  const idx = h.readUInt32BE(0) % variants.length;
-  return variants[idx];
 }
 
 // TS diag 表补丁：正则匹配 diag(key, category, "messageKey", "English text") 行，

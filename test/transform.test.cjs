@@ -89,15 +89,15 @@ test('transformValue: 命中规则 / 幂等 / 兜底装饰', () => {
   assert.strictEqual(twice.value, dec.value);
 });
 
-test('transformValue: 多变体按索引轮转', () => {
+test('transformValue: 多变体按 hash 确定性选择', () => {
   const multiKey = Object.keys(RULES).find((k) => RULES[k].length > 1);
   if (!multiKey) return; // 理论上存在 22 组，找不到则跳过
   const variants = RULES[multiKey];
-  assert.strictEqual(transformValue(multiKey, 0, off).value, variants[0 % variants.length]);
-  assert.strictEqual(transformValue(multiKey, 1, off).value, variants[1 % variants.length]);
-  if (variants.length > 1) {
-    assert.strictEqual(transformValue(multiKey, 5, off).value, variants[5 % variants.length]);
-  }
+  // 相同 key 始终返回相同变体（确定性 hash）
+  assert.strictEqual(transformValue(multiKey, 0, off).value, transformValue(multiKey, 100, off).value);
+  assert.strictEqual(transformValue(multiKey, 0, off).value, transformValue(multiKey, 999, off).value);
+  // 变体数量正确
+  assert.ok(variants.length >= 2, `应有至少 2 个变体，实际 ${variants.length}`);
 });
 
 function pickKey() {

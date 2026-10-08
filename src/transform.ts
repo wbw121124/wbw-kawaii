@@ -1,6 +1,8 @@
 // 纯文本改写核心：不依赖 vscode 模块，便于 node 直接单测。
 import { RULES, RULES_VERSION, IDENTITY_VALUES } from './rules.generated';
+import * as crypto from 'crypto';
 import { getFallbackSuffix, shouldSkipDecorate, KawaiiOptions } from './kawaii-options';
+import { pickVariant } from './variant-picker';
 
 export { RULES, RULES_VERSION, IDENTITY_VALUES };
 export interface PatchOptions extends KawaiiOptions {}
@@ -70,7 +72,7 @@ export function transformValue(value: string, index: number, opts: PatchOptions)
 
   const variants = RULES[value];
   if (variants && variants.length > 0) {
-    const pick = variants[index % variants.length];
+    const pick = pickVariant(variants, value);
     if (placeholderSeqEqual(value, pick)) {
       return { value: pick, kind: 'hit' };
     }
