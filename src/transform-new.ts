@@ -56,6 +56,12 @@ export function patchTsDiag(
   return { content: result, stats: { hits, decorated }, changed: result !== content || changed };
 }
 
+// value 行的收尾部分：value 闭引号之后的可选逗号 + 空白（不含闭引号，模板自带）。
+// 按行尾锚点取，避免 indexOf/lastIndexOf 在 key 包含 value 子串时错位，或重复输出闭引号。
+function trailingOf(line: string): string {
+  return line.match(/(\s*,?\s*)$/)?.[0] ?? '';
+}
+
 // zh JSON 补丁（jsonObject）：逐行替换 value
 export function patchJsonObject(
   content: string,
@@ -75,18 +81,16 @@ export function patchJsonObject(
     const key = m[1];
     const val = m[2];
     const variants = rules[key];
+    const indent = line.match(/^(\s*)/)?.[1] ?? '';
+    const trailing = trailingOf(line);
     if (variants && variants.length > 0) {
       const cute = pickVariant(variants, key);
       if (cute !== val) {
-        const indent = line.match(/^(\s*)/)?.[1] ?? '';
-        const trailing = line.slice(line.indexOf(val) + val.length);
         lines[i] = `${indent}"${key}": "${cute}"${trailing}`;
         hits++;
         changed = true;
       }
     } else if (val.trim() && !val.endsWith(suffix) && !shouldSkipDecorate(val, o.intensity)) {
-      const indent = line.match(/^(\s*)/)?.[1] ?? '';
-      const trailing = line.slice(line.lastIndexOf(val) + val.length);
       lines[i] = `${indent}"${key}": "${val}${suffix}"${trailing}`;
       decorated++;
       changed = true;

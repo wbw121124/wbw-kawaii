@@ -215,4 +215,10 @@ test('transformPylint: 无前缀消息按 diagnostic.code 命中', () => {
   );
 });
 
-
+test('patchJsonObject: key 包含 value 子串时引号不重复且 JSON 合法', () => {
+  const { patchJsonObject } = require('../out/transform-new.js');
+  const input = '{\n  "value": "value"\n}\n';
+  const { content } = patchJsonObject(input, { value: ['可爱的值喵~'] });
+  assert.strictEqual(content, '{\n  "value": "可爱的值喵~"\n}\n');
+  JSON.parse(content);
+});
