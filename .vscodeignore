@@ -7,6 +7,11 @@ test/**
 src/**
 tsconfig.json
 **/*.map
-engine/**
 .opencode/**
 plan.md
+# engine：只打包运行时四件套（loader / wasm 胶水 / .node / wasm 产物），排除源码与构建目录
+engine/**
+!engine/index.js
+!engine/glue.mjs
+!engine/*.node
+!engine/kawaii_wasm.wasm

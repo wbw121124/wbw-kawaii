@@ -23,7 +23,7 @@
   "scripts": {
     "build": "napi build --release --package kawaii-napi --output-dir . --dts kawaii-napi.d.ts",
     "build:debug": "napi build --package kawaii-napi --output-dir . --dts kawaii-napi.d.ts",
-    "build:wasm": "cargo build --release --target wasm32-unknown-unknown -p kawaii-wasm",
+    "build:wasm": "cargo build --release --target wasm32-unknown-unknown -p kawaii-wasm && node scripts/copy-wasm.mjs",
     "test": "node test/smoke.cjs && node test/smoke-wasm.cjs && node test/parity.cjs"
   },
   "devDependencies": {
