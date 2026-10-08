@@ -140,7 +140,10 @@
     "extract:inputs": "node scripts/extract-rule-inputs.mjs",
     "compile": "tsc -p ./",
     "watch": "tsc -w -p ./",
-    "test": "tsc -p ./ && node --test test/transform.test.cjs test/uninstall-restore.test.cjs test/new-targets.test.cjs",
+    "test": "tsc -p ./ && npm run test:ts && npm run test:native && npm run test:wasm",
+    "test:ts": "node scripts/test-mode.mjs ts",
+    "test:native": "node scripts/test-mode.mjs native",
+    "test:wasm": "node scripts/test-mode.mjs wasm",
     "package": "vsce package",
     "vscode:uninstall": "node ./out/uninstall-restore.js",
     "build:rules:check": "node scripts/build-rules.mjs --check"

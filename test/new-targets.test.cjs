@@ -7,7 +7,7 @@ const os = require('node:os');
 
 // ========== token 测试（新增 {N}）==========
 test('tokenize 识别 {N} 占位符', () => {
-  const { tokenize } = require('../out/transform.js');
+  const { tokenize } = require('./_backend.cjs');
   assert.deepStrictEqual(tokenize('{0} 和 {1}'), ['{0}', '{1}']);
   assert.deepStrictEqual(tokenize('{10} 与 {2} 顺序不同'), ['{10}', '{2}']);
   assert.deepStrictEqual(tokenize('无占位符'), []);
@@ -26,7 +26,7 @@ test('shouldPatchTarget: zh-cn 允许新目标，en 拒绝', () => {
 
 // ========== patchJsonObject（纯模块无 vscode 依赖）==========
 test('patchJsonObject: 命中替换 + 兜底后缀 + 保持结构', () => {
-  const { patchJsonObject } = require('../out/transform-new.js');
+  const { patchJsonObject } = require('./_backend.cjs');
   const rules = { key_a: ['替代文案A', '替代文案B'] };
   const content = '{\n  "key_a": "原文案",\n  "key_b": "无规则文案",\n  "key_c": null\n}\n';
   const res = patchJsonObject(content, rules, { personaStyle: 'soft', intensity: 'normal', customFallback: ' 喵~' });
@@ -41,7 +41,7 @@ test('patchJsonObject: 命中替换 + 兜底后缀 + 保持结构', () => {
 
 // ========== patchPackBundle ==========
 test('patchPackBundle: 只动 contents.bundle，license/version 字节不动', () => {
-  const { patchPackBundle } = require('../out/transform-new.js');
+  const { patchPackBundle } = require('./_backend.cjs');
   const rules = { 'key_a': ['改版 A'] };
   const content = '{"":"license","version":"1.0.0","contents":{"bundle":{"key_a":"原文","key_b":"无规则"}}}';
   const res = patchPackBundle(content, rules);
@@ -57,7 +57,7 @@ test('patchPackBundle: 只动 contents.bundle，license/version 字节不动', (
 
 // ========== patchBundleTemplate ==========
 test('patchBundleTemplate: 模板串加后缀，已打过则跳过', () => {
-  const { patchBundleTemplate } = require('../out/transform-new.js');
+  const { patchBundleTemplate } = require('./_backend.cjs');
   const content = 'l10n.t("other") + `Unknown at rule @${name}`;';
   const res = patchBundleTemplate(content, null, { personaStyle: 'soft', intensity: 'normal', customFallback: ' 喵~' });
   assert.strictEqual(res.changed, true);
@@ -122,7 +122,7 @@ test('PACK_RULES 所有变体占位符与键（即英文原文）一致', () => 
 
 // ========== transformMarkdownlint ==========
 test('transformMarkdownlint: 命中规则替换 description', () => {
-  const { transformMarkdownlint } = require('../out/transform-new.js');
+  const { transformMarkdownlint } = require('./_backend.cjs');
   const rules = { 'MD013': ['行太长了啦~', '行长度超标了喵~'] };
   assert.strictEqual(
     transformMarkdownlint('MD013: Line length', rules),
@@ -131,7 +131,7 @@ test('transformMarkdownlint: 命中规则替换 description', () => {
 });
 
 test('transformMarkdownlint: 无规则兜底后缀', () => {
-  const { transformMarkdownlint } = require('../out/transform-new.js');
+  const { transformMarkdownlint } = require('./_backend.cjs');
   assert.strictEqual(
     transformMarkdownlint('MD999: Unknown rule', {}, { personaStyle: 'soft', intensity: 'normal' }),
     'MD999: Unknown rule ~'
@@ -139,7 +139,7 @@ test('transformMarkdownlint: 无规则兜底后缀', () => {
 });
 
 test('transformMarkdownlint: 已带后缀不重复', () => {
-  const { transformMarkdownlint } = require('../out/transform-new.js');
+  const { transformMarkdownlint } = require('./_backend.cjs');
   assert.strictEqual(
     transformMarkdownlint('MD001: heading 喵~', {}, { personaStyle: 'soft', intensity: 'normal', customFallback: ' 喵~' }),
     'MD001: heading 喵~'
@@ -148,7 +148,7 @@ test('transformMarkdownlint: 已带后缀不重复', () => {
 
 // ========== transformPylint ==========
 test('transformPylint: 命中规则替换 description', () => {
-  const { transformPylint } = require('../out/transform-new.js');
+  const { transformPylint } = require('./_backend.cjs');
   const rules = { 'C0114': ['缺少模块文档啦~', '模块文档不见咯~'] };
   const result = transformPylint('C0114: Missing module docstring', rules);
   // hash 轮转选变体，只需验证格式正确且包含可爱文案
@@ -157,7 +157,7 @@ test('transformPylint: 命中规则替换 description', () => {
 });
 
 test('transformPylint: 无规则兜底后缀', () => {
-  const { transformPylint } = require('../out/transform-new.js');
+  const { transformPylint } = require('./_backend.cjs');
   assert.strictEqual(
     transformPylint('Z9999: Unknown', {}, { personaStyle: 'soft', intensity: 'normal' }),
     'Z9999: Unknown ~'
@@ -173,7 +173,7 @@ test('interceptDiagnosticCollection: 不重复注册同一 source', () => {
 
 // ========== 运行时拦截真实消息格式（markdownlint-vscode / vscode-pylint） ==========
 test('transformMarkdownlint: alias/详情消息按英文描述命中', () => {
-  const { transformMarkdownlint } = require('../out/transform-new.js');
+  const { transformMarkdownlint } = require('./_backend.cjs');
   const rules = { 'Line too long': ['行太长了喵~'] };
   assert.strictEqual(
     transformMarkdownlint('MD013/line-length: Line too long [121 > 80]', rules),
@@ -182,7 +182,7 @@ test('transformMarkdownlint: alias/详情消息按英文描述命中', () => {
 });
 
 test('transformMarkdownlint: 无前缀消息按 diagnostic.code 命中', () => {
-  const { transformMarkdownlint } = require('../out/transform-new.js');
+  const { transformMarkdownlint } = require('./_backend.cjs');
   const rules = { MD013: ['行太长了喵~'] };
   assert.strictEqual(
     transformMarkdownlint('Line too long', rules, undefined, 'MD013'),
@@ -191,7 +191,7 @@ test('transformMarkdownlint: 无前缀消息按 diagnostic.code 命中', () => {
 });
 
 test('transformMarkdownlint: 未命中时详情后保留、后缀加在末尾', () => {
-  const { transformMarkdownlint } = require('../out/transform-new.js');
+  const { transformMarkdownlint } = require('./_backend.cjs');
   assert.strictEqual(
     transformMarkdownlint('MD013/line-length: Line too long [999 > 80]', {}, { personaStyle: 'soft', intensity: 'normal' }),
     'MD013/line-length: Line too long [999 > 80] ~'
@@ -199,7 +199,7 @@ test('transformMarkdownlint: 未命中时详情后保留、后缀加在末尾', 
 });
 
 test('transformPylint: 无前缀消息兜底后缀', () => {
-  const { transformPylint } = require('../out/transform-new.js');
+  const { transformPylint } = require('./_backend.cjs');
   assert.strictEqual(
     transformPylint('Missing module docstring', {}, { personaStyle: 'soft', intensity: 'normal' }),
     'Missing module docstring ~'
@@ -207,7 +207,7 @@ test('transformPylint: 无前缀消息兜底后缀', () => {
 });
 
 test('transformPylint: 无前缀消息按 diagnostic.code 命中', () => {
-  const { transformPylint } = require('../out/transform-new.js');
+  const { transformPylint } = require('./_backend.cjs');
   const rules = { 'missing-module-docstring': ['缺少模块文档喵~'] };
   assert.strictEqual(
     transformPylint('Missing module docstring', rules, undefined, 'missing-module-docstring'),
@@ -216,7 +216,7 @@ test('transformPylint: 无前缀消息按 diagnostic.code 命中', () => {
 });
 
 test('patchJsonObject: key 包含 value 子串时引号不重复且 JSON 合法', () => {
-  const { patchJsonObject } = require('../out/transform-new.js');
+  const { patchJsonObject } = require('./_backend.cjs');
   const input = '{\n  "value": "value"\n}\n';
   const { content } = patchJsonObject(input, { value: ['可爱的值喵~'] });
   assert.strictEqual(content, '{\n  "value": "可爱的值喵~"\n}\n');

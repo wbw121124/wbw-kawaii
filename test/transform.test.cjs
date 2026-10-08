@@ -13,7 +13,7 @@ const {
   transformValue,
   patchContent,
   formatStats
-} = require('../out/transform.js');
+} = require('./_backend.cjs');
 
 const BASELINE_DIR = path.join(__dirname, '..', 'assets', 'baseline');
 const on = { decorateFallback: true, personaStyle: "soft", intensity: "normal" };
