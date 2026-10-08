@@ -7,3 +7,6 @@ description = "可爱化引擎纯 Rust 核心（消息 CST / 规则 DSL / 求值
 
 [lib]
 name = "kawaii_core"
+
+[dependencies]
+rowan = "0.17.0"

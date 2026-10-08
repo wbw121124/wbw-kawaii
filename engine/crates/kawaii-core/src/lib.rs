@@ -1,6 +1,9 @@
 //! kawaii-core：纯 Rust 核心，零 napi / 零 wasmtime 依赖，可编译到 wasm32。
 //!
-//! P1 起在此堆叠：消息 CST 解析（cst/message）、规则 DSL（cst/rule）、求值（eval）。
+//! - `cst`：消息 lossless 解析（P1 起）；后续堆叠规则 DSL 与求值。
+#![deny(warnings)]
+
+pub mod cst;
 
 /// 引擎版本（与 workspace 同步）。
 pub const ENGINE_VERSION: &str = env!("CARGO_PKG_VERSION");
