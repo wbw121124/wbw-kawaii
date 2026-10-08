@@ -33,12 +33,17 @@ export declare function loadRules(source: string): string
 /** 直接加载规则 DSL 文本（浏览器端 file: 由调用方先取文本）。 */
 export declare function loadRulesText(text: string): string
 
-/** transform-new 系列结果（stats 仅 hits/decorated，与 TS 返回形状一致）。 */
+/** transform-new 系列结果（与 TS `{content, stats, changed}` 一致）。 */
 export interface NewPatchResultJs {
   content: string
+  stats: NewPatchStatsJs
+  changed: boolean
+}
+
+/** transform-new 系列统计（与 TS `{hits, decorated}` 一致）。 */
+export interface NewPatchStatsJs {
   hits: number
   decorated: number
-  changed: boolean
 }
 
 /** bundle 模板串补丁（TS `patchBundleTemplate`；rules 参数 TS 内未使用，此处仅兼容签名）。 */

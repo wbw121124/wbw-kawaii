@@ -209,12 +209,18 @@ pub struct PatchResultJs {
     pub changed: bool,
 }
 
-/// transform-new 系列结果（stats 仅 hits/decorated，与 TS 返回形状一致）。
+/// transform-new 系列统计（与 TS `{hits, decorated}` 一致）。
+#[napi(object)]
+pub struct NewPatchStatsJs {
+    pub hits: u32,
+    pub decorated: u32,
+}
+
+/// transform-new 系列结果（与 TS `{content, stats, changed}` 一致）。
 #[napi(object)]
 pub struct NewPatchResultJs {
     pub content: String,
-    pub hits: u32,
-    pub decorated: u32,
+    pub stats: NewPatchStatsJs,
     pub changed: bool,
 }
 
@@ -222,8 +228,10 @@ impl From<core_new::NewPatchResult> for NewPatchResultJs {
     fn from(r: core_new::NewPatchResult) -> Self {
         NewPatchResultJs {
             content: r.content,
-            hits: r.hits,
-            decorated: r.decorated,
+            stats: NewPatchStatsJs {
+                hits: r.stats.hits,
+                decorated: r.stats.decorated,
+            },
             changed: r.changed,
         }
     }

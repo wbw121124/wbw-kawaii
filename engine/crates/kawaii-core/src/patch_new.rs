@@ -11,12 +11,18 @@ use std::collections::HashMap;
 
 pub type RuleTable = HashMap<String, Vec<String>>;
 
-/// transform-new 的结果形状（stats 仅 hits/decorated）。
+/// transform-new 的统计（TS 返回的 `stats: { hits, decorated }`）。
+#[derive(Debug, Clone, Default, PartialEq, Eq, serde::Serialize)]
+pub struct NewStats {
+    pub hits: u32,
+    pub decorated: u32,
+}
+
+/// transform-new 的结果形状（与 TS `{ content, stats, changed }` 一致）。
 #[derive(Debug, Clone, serde::Serialize)]
 pub struct NewPatchResult {
     pub content: String,
-    pub hits: u32,
-    pub decorated: u32,
+    pub stats: NewStats,
     pub changed: bool,
 }
 
@@ -333,8 +339,7 @@ pub fn patch_json_object(content: &str, rules: &RuleTable, opts: &EvalOptions) -
     }
     NewPatchResult {
         content: parts.concat(),
-        hits,
-        decorated,
+        stats: NewStats { hits, decorated },
         changed,
     }
 }
@@ -357,8 +362,7 @@ pub fn patch_pack_bundle(content: &str, rules: &RuleTable, opts: &EvalOptions) -
         None => {
             return NewPatchResult {
                 content: content.to_string(),
-                hits: 0,
-                decorated: 0,
+                stats: NewStats::default(),
                 changed: false,
             }
         }
@@ -397,8 +401,7 @@ pub fn patch_pack_bundle(content: &str, rules: &RuleTable, opts: &EvalOptions) -
     if !changed {
         return NewPatchResult {
             content: content.to_string(),
-            hits: 0,
-            decorated: 0,
+            stats: NewStats::default(),
             changed: false,
         };
     }
@@ -406,8 +409,7 @@ pub fn patch_pack_bundle(content: &str, rules: &RuleTable, opts: &EvalOptions) -
     NewPatchResult {
         changed: compact != content,
         content: compact,
-        hits,
-        decorated,
+        stats: NewStats { hits, decorated },
     }
 }
 
@@ -479,8 +481,7 @@ pub fn patch_bundle_template(
     parts.push(content[pos..].to_string());
     NewPatchResult {
         content: parts.concat(),
-        hits,
-        decorated,
+        stats: NewStats { hits, decorated },
         changed,
     }
 }
@@ -766,8 +767,7 @@ pub fn patch_ts_diag(content: &str, rules: &RuleTable, opts: &EvalOptions) -> Ne
     NewPatchResult {
         changed: changed1 || changed2 || final_content != content,
         content: final_content,
-        hits,
-        decorated,
+        stats: NewStats { hits, decorated },
     }
 }
 

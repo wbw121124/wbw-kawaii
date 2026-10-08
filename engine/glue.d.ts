@@ -44,11 +44,16 @@ export interface PatchResult {
   changed: boolean
 }
 
-/** transform-new 系列结果（stats 仅 hits/decorated）。 */
-export interface NewPatchResult {
-  content: string
+/** transform-new 系列统计（与 TS `{hits, decorated}` 一致）。 */
+export interface NewPatchStats {
   hits: number
   decorated: number
+}
+
+/** transform-new 系列结果（与 TS `{content, stats, changed}` 一致）。 */
+export interface NewPatchResult {
+  content: string
+  stats: NewPatchStats
   changed: boolean
 }
 
