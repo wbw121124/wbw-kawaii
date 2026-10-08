@@ -1,28 +1,60 @@
 # Changelog
 
-## 0.2.0
+所有重要变更记录于此。
 
-- 新增：扩展覆盖范围至 **TypeScript / JavaScript / CSS / HTML / XHTML** 报错文案（与 cpptools 并列）；
-- 新增：规则源由子代理按 hash 选创意角度重写（6 种句式：省略补白 / 语序调整 / 同义替换 / 句式转换 / 语气词点缀 / 口语化），变体不再单调；
-- 新增：语言包（`ms-ceintl.vscode-language-pack-zh-hans`）CSS/HTML 252 条全可爱化；
-- 新增：zh-cn 门控——**非 zh-cn 界面下自动还原** TS/CSS/HTML 补丁并弹通知，en 界面保持英文原文；
-- 新增：`targets-manifest.json` 卸载清单，卸载后能还原所有目标文件；
-- 新增：`extract:inputs` / `regenerate-rules` / `finalize:chunks` 等开发脚本；
-- 修复：`patchJsonObject` / `patchBundleTemplate` 正则 bug（value 替换位置错误、`${...}` 插值被吞掉）；
-- 修复：TS 规则源占位符严格校验（build-rules 拒绝源-变体 token 序列不一致的条目）；
-- 变更：`RULES_VERSION` 现在覆盖 cpptools + TS + PACK 全部规则，变更时统一触发回滚重打。
+格式参考 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.0.0/)。
 
-## 0.1.1
+---
 
-- 修复：参考文案原样保留（identity）的拼接片段不再被兜底后缀注进消息中间 —— `变量`、` (已声明 `、`所在行数:` 等 180 条片段保持原样，组合消息里不再出现「中间 喵~」和多余空格；
-- 修复：规则表更新后先从备份取回原文再改写，旧版改写产物不会挡住新规则落地；
-- 修复：空串/纯空白条目不再追加后缀；
-- 新增：卸载时自动还原 —— `vscode:uninstall` 钩子在卸载后的下一次**完全重启** VS Code 时，把 cpptools `messages.json` 从备份还原并清理备份/meta（重载窗口不触发，需退出全部 VS Code 进程再启动）。
+## [0.3.0] — 2026-10-08
 
-## 0.1.0
+### 新增
+- **markdownlint 运行时拦截**：通过 `createDiagnosticCollection` 拦截，40 条规则可爱化
+- **pylint 运行时拦截**：同上，复用 PACK_RULES（~252 条 Python 消息）
+- **人设风格系统**（`wbw-kawaii.personaStyle`）：soft / tsundere / derriere / cool 四种人设，各有不同兜底后缀和彩蛋文案
+- **可爱强度**（`wbw-kawaii.kawaiiIntensity`）：subtle / normal / bold 三级控制装饰激进程度
+- **按目标细粒度开关**（`wbw-kawaii.targets`）：cpptools / typescript / cssHtml / markdownlint / pylint 独立开关
+- **自定义兜底后缀**（`wbw-kawaii.customFallback`）：完全覆盖人设风格的默认后缀
+- **状态栏控件**：右下角显示 🌸 wbw-kawaii，点击弹出 QuickPick（重新改写/还原文案/查看状态/切换人设/示弱彩蛋）
+- **编辑器右键菜单**：TS/CSS/HTML/Cpp 文件右键可用 patch/status 命令
+- **人设切换命令**（`wbw-kawaii.cyclePersona`）：循环切换四种人设
+- **示弱彩蛋命令**（`wbw-kawaii.whimper`）：检测"菜/蒟蒻/蛆/虫/弱爆"等关键词，触发人设专属警告
 
-- 首个版本：
-  - 运行时对当前安装的 cpptools `messages.json` 就地改写（规则表按原文直接 replace + 正则兜底装饰）；
-  - 双基准规则表（cpptools 1.34.4 + 1.19.7，zh-cn），三版本实测覆盖 ≥ 94%；
-  - 自动备份 / 还原、版本变化自动重打、状态统计命令；
-  - 保留原文件格式（UTF-8 无 BOM、CRLF、缩进、null 条目）。
+### 改进
+- **20 种结构差异化策略**重写 TS/PACK 变体（从 6 种机械后缀替换升级为结构变换）
+- **子代理精修前 300 条**高频 TS 消息（282/300 通过占位符校验）
+- **build-rules 质量报告**：输出模板率、结构差异率等指标
+- **curate 文件优先级**：`ts-curate-NN.json` 覆盖 `ts-NN.json` 同名条目
+- **PatchOptions 统一**：`transform.ts` / `transform-new.ts` 均透传 opts，兜底后缀完全运行时化
+- **patcher.ts 重构**：提取 `buildOpts()` 辅助函数，消除重复代码，`as any` 清零，`require()` 改为顶层 import
+
+### 质量指标
+- 模板结尾率：73% → **2.9%**
+- 变体对结构不同率：0.6% → **87.6%**
+- cpptools 覆盖率：维持在 ~94.6%
+
+---
+
+## [0.2.0] — 2026-10-07
+
+### 新增
+- TS / CSS / HTML 目标可爱化（运行时定位文件 + 规则表 replace）
+- 语言包 `contents.bundle` 替换
+- CSS/HTML server bundle 模板串兜底
+- 非 zh-cn 自动还原机制
+- 卸载钩子（`vscode:uninstall`）
+- `scripts/` 规则生成流水线（extract → regenerate → finalize → build）
+- 37 项单测（含多版本覆盖率断言）
+
+### 改进
+- displayName 更新为 `wbw121124's kawaii 报错文案`
+- cpptools 非 zh-cn 静默还原（不再弹通知）
+
+---
+
+## [0.1.1] — 早期版本
+
+### 新增
+- cpptools messages.json 可爱化（核心功能）
+- 规则表生成脚本
+- 基础测试框架
