@@ -10,9 +10,9 @@ mod lexer;
 mod parser;
 
 pub use ast::{
-    parse_rules, CmpOp, Matcher, RewriteOp, RuleAst, RuleError, RuleSet,
+    parse_rules, CmpOp, CtxVal, Matcher, RewriteOp, RuleAst, RuleError, RuleSet,
 };
-pub use eval::{transform, EvalOptions, TransformOutcome};
+pub use eval::{transform, transform_with_host, EvalOptions, TransformOutcome};
 pub use kinds::{RuleLang, RuleSyntaxKind};
 
 #[cfg(test)]
@@ -310,5 +310,199 @@ rule "high" priority 9 { rewrite { append_text("-H"); } }
 
         let out = transform("普通文本没有前缀", &set, &opts());
         assert!(out.applied.is_empty());
+    }
+
+    // ── call() 自定义规则函数 ──────────────────────────────────
+
+    use crate::fnhost::CustomFnHost;
+    use std::sync::Mutex;
+
+    /// 测试宿主：记录收到的 ctx_json，按构造结果回写。
+    struct MockHost {
+        /// 每次调用收到的 ctx_json
+        seen: Mutex<Vec<String>>,
+        /// 返回值（每次克隆）；None = 输入原样返回
+        out: Option<String>,
+        /// 强制错误（优先于 out）
+        fail: Option<String>,
+    }
+
+    impl MockHost {
+        fn new() -> Self {
+            Self { seen: Mutex::new(Vec::new()), out: None, fail: None }
+        }
+        fn with_out(out: &str) -> Self {
+            Self { seen: Mutex::new(Vec::new()), out: Some(out.to_string()), fail: None }
+        }
+        fn failing(msg: &str) -> Self {
+            Self { seen: Mutex::new(Vec::new()), out: None, fail: Some(msg.to_string()) }
+        }
+    }
+
+    impl CustomFnHost for MockHost {
+        fn call(&self, _name: &str, input: &str, ctx_json: &str) -> Result<String, String> {
+            self.seen.lock().expect("锁").push(ctx_json.to_string());
+            if let Some(e) = &self.fail {
+                return Err(e.clone());
+            }
+            Ok(match &self.out {
+                Some(o) => o.clone(),
+                None => input.to_string(),
+            })
+        }
+        fn kind(&self) -> &'static str {
+            "mock"
+        }
+    }
+
+    #[test]
+    fn parses_call_with_args_and_ctx_object() {
+        let set = parse_rules(
+            r#"rule "c" { rewrite { call("ts_hint", "a", "b", { mode: persona, n: 42, on: true, inten: intensity }); } }"#,
+        )
+        .expect("规则合法");
+        assert_eq!(
+            set.rules[0].rewrites,
+            vec![RewriteOp::Call {
+                name: "ts_hint".into(),
+                args: vec!["a".into(), "b".into()],
+                ctx: vec![
+                    ("mode".into(), CtxVal::Persona),
+                    ("n".into(), CtxVal::Num("42".into())),
+                    ("on".into(), CtxVal::Bool(true)),
+                    ("inten".into(), CtxVal::Intensity),
+                ],
+            }]
+        );
+
+        // 最简形态
+        let set = parse_rules(r#"rule "c" { rewrite { call("shout"); } }"#).expect("合法");
+        assert_eq!(
+            set.rules[0].rewrites,
+            vec![RewriteOp::Call {
+                name: "shout".into(),
+                args: vec![],
+                ctx: vec![],
+            }]
+        );
+    }
+
+    #[test]
+    fn call_shape_errors() {
+        // 缺函数名
+        let err = parse_rules(r#"rule "c" { rewrite { call(); } }"#)
+            .err()
+            .expect("应报错");
+        assert!(err.message.contains("函数名"), "{}", err.message);
+
+        // 裸标识符参数（非字符串 / 非对象）
+        let err = parse_rules(r#"rule "c" { rewrite { call("f", whatever); } }"#)
+            .err()
+            .expect("应报错");
+        assert!(err.message.contains("双引号"), "{}", err.message);
+
+        // 对象后还有参数
+        let err = parse_rules(r#"rule "c" { rewrite { call("f", { a: 1 }, "x"); } }"#)
+            .err()
+            .expect("应报错");
+        assert!(err.message.contains("最后一个参数"), "{}", err.message);
+
+        // 上下文键必须是标识符
+        let err = parse_rules(r#"rule "c" { rewrite { call("f", { 1: 2 }); } }"#)
+            .err()
+            .expect("应报错");
+        assert!(err.message.contains("键必须是标识符"), "{}", err.message);
+
+        // 上下文裸变量不支持
+        let err = parse_rules(r#"rule "c" { rewrite { call("f", { mode: whatever }); } }"#)
+            .err()
+            .expect("应报错");
+        assert!(err.message.contains("whatever"), "{}", err.message);
+
+        // 嵌套对象不支持
+        let err = parse_rules(r#"rule "c" { rewrite { call("f", { a: { b: 1 } }); } }"#)
+            .err()
+            .expect("应报错");
+        assert!(err.message.contains("嵌套"), "{}", err.message);
+
+        // match 里的 call 不是选择器
+        let err = parse_rules(r#"rule "c" { match { call("f") } }"#)
+            .err()
+            .expect("应报错");
+        assert!(err.message.contains("call"), "{}", err.message);
+    }
+
+    #[test]
+    fn eval_call_rewrites_via_host_and_passes_ctx() {
+        let set = parse_rules(
+            r#"rule "c" { rewrite { call("hint", "extra", { mode: persona, level: 3 }); } }"#,
+        )
+        .expect("规则合法");
+        let host = MockHost::with_out("改写后的消息");
+        let mut o = opts();
+        o.persona = PersonaStyle::Derriere;
+        let out = transform_with_host("原始消息", &set, &o, &host);
+        assert_eq!(out.output, "改写后的消息");
+        assert_eq!(out.applied, vec!["c"]);
+        assert!(out.rejected.is_empty());
+
+        let seen = host.seen.lock().expect("锁");
+        assert_eq!(seen.len(), 1);
+        let ctx = &seen[0];
+        assert!(ctx.contains(r#""fn":"hint""#), "{}", ctx);
+        assert!(ctx.contains(r#""args":["extra"]"#), "{}", ctx);
+        assert!(ctx.contains(r#""mode":"derriere""#), "{}", ctx);
+        assert!(ctx.contains(r#""level":3"#), "{}", ctx);
+    }
+
+    #[test]
+    fn eval_unregistered_call_rejects_rule() {
+        let set = parse_rules(r#"rule "c" { rewrite { call("nobody"); } }"#).expect("合法");
+        let mut o = opts();
+        o.decorate_fallback = false;
+        let out = transform_with_host("消息", &set, &o, &crate::fnhost::NoFnHost);
+        assert_eq!(out.output, "消息", "失败必须整条回滚");
+        assert_eq!(out.rejected, vec!["c"]);
+        assert!(out.applied.is_empty());
+
+        // 走 transform() 默认也是 NoFnHost
+        let out = transform("消息", &set, &o);
+        assert_eq!(out.rejected, vec!["c"]);
+    }
+
+    #[test]
+    fn eval_host_error_rolls_back_whole_rule() {
+        let set = parse_rules(
+            r#"rule "c" { rewrite { replace_text("消息", "已替换"); call("boom"); } }"#,
+        )
+        .expect("合法");
+        let host = MockHost::failing("沙箱炸了");
+        let mut o = opts();
+        o.decorate_fallback = false;
+        let out = transform_with_host("消息", &set, &o, &host);
+        assert_eq!(out.output, "消息", "前面的 replace 也必须随规则回滚");
+        assert_eq!(out.rejected, vec!["c"]);
+    }
+
+    #[test]
+    fn eval_host_result_breaking_placeholders_is_rejected() {
+        let set = parse_rules(r#"rule "c" { rewrite { call("evil"); } }"#).expect("合法");
+        let host = MockHost::with_out("hello X world");
+        let mut o = opts();
+        o.decorate_fallback = false;
+        let out = transform_with_host("hello {0} world", &set, &o, &host);
+        assert_eq!(out.output, "hello {0} world", "占位符被破坏必须拒绝");
+        assert_eq!(out.rejected, vec!["c"]);
+    }
+
+    #[test]
+    fn eval_host_noop_result_not_recorded() {
+        let set = parse_rules(r#"rule "c" { rewrite { call("noop"); } }"#).expect("合法");
+        let host = MockHost::new(); // 原样返回
+        let mut o = opts();
+        o.decorate_fallback = false;
+        let out = transform_with_host("不变", &set, &o, &host);
+        assert!(out.applied.is_empty(), "cand==out 不记账");
+        assert!(out.rejected.is_empty());
     }
 }

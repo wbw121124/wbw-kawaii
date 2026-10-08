@@ -1,8 +1,14 @@
 //! 引擎门面：有状态 API（规则热加载 / 人设轮转 / 统计），napi 与 wasm 壳镜像调用。
 
-use crate::dsl::{parse_rules, transform, EvalOptions, RuleError, RuleSet};
+use std::sync::Arc;
+
+use crate::dsl::{parse_rules, transform_with_host, EvalOptions, RuleError, RuleSet, TransformOutcome};
+use crate::fnhost::{CustomFnHost, NoFnHost};
 use crate::jsonlite::{parse_flat_object, JVal};
 use crate::persona::{get_persona, is_whimper_input, KawaiiIntensity, PersonaStyle};
+
+/// 未设置自定义函数宿主时使用的空宿主（`&NoFnHost` 提升为 'static）。
+static NO_FN_HOST: NoFnHost = NoFnHost;
 
 /// 内置结构规则（0.9.0 语料编译后在此扩充）。
 pub const BUILTIN_RULES: &str = include_str!("../../../data/builtin.kawaii");
@@ -63,11 +69,13 @@ pub struct Stats {
     pub rule_count: usize,
 }
 
-/// 有状态引擎：规则集 + 当前人设。
+/// 有状态引擎：规则集 + 当前人设 + 自定义函数宿主。
 pub struct Engine {
     rules: RuleSet,
     rules_version: String,
     persona: PersonaStyle,
+    /// `call("fn", ...)` 的执行后端（native 注入 Wasmtime；缺省 NoFnHost 全拒）
+    fn_host: Option<Arc<dyn CustomFnHost>>,
 }
 
 impl Default for Engine {
@@ -83,7 +91,31 @@ impl Engine {
             rules: builtin_rules(),
             rules_version: version_of(BUILTIN_RULES, "builtin"),
             persona: PersonaStyle::Soft,
+            fn_host: None,
         }
+    }
+
+    /// 注入自定义函数宿主（native 壳加载 Wasmtime 后调用；`None` 回到全拒）。
+    pub fn set_fn_host(&mut self, host: Option<Arc<dyn CustomFnHost>>) {
+        self.fn_host = host;
+    }
+
+    /// 当前宿主标识（`none` | `wasmtime` | ...），供统计 / 调试。
+    pub fn fn_host_kind(&self) -> &'static str {
+        match &self.fn_host {
+            Some(h) => h.kind(),
+            None => NO_FN_HOST.kind(),
+        }
+    }
+
+    /// 求值用宿主引用（未注入时空宿主）。
+    fn fn_host(&self) -> &dyn CustomFnHost {
+        self.fn_host.as_deref().unwrap_or(&NO_FN_HOST)
+    }
+
+    /// 规则求值主路径（带宿主）。
+    fn run_rules(&self, msg: &str, opts: &EvalOptions) -> TransformOutcome {
+        transform_with_host(msg, &self.rules, opts, self.fn_host())
     }
 
     /// 热加载规则文本：原子替换求值状态，返回新规则版本。
@@ -151,7 +183,7 @@ impl Engine {
     /// 消息主入口：内置/已加载 DSL 规则 + 人设兜底。
     pub fn transform_message(&self, msg: &str, opts: Option<&EngineOpts>) -> String {
         let o = self.eval_opts(opts);
-        transform(msg, &self.rules, &o).output
+        self.run_rules(msg, &o).output
     }
 
     /// MarkdownLint 消息：DSL 规则优先；未命中走结构化兜底
@@ -164,7 +196,7 @@ impl Engine {
     ) -> String {
         let mut o = self.eval_opts(opts);
         o.decorate_fallback = false; // 结构化兜底自己控制后缀位置
-        let out = transform(msg, &self.rules, &o);
+        let out = self.run_rules(msg, &o);
         if !out.applied.is_empty() {
             return out.output;
         }
@@ -200,7 +232,7 @@ impl Engine {
     ) -> String {
         let mut o = self.eval_opts(opts);
         o.decorate_fallback = false;
-        let out = transform(msg, &self.rules, &o);
+        let out = self.run_rules(msg, &o);
         if !out.applied.is_empty() {
             return out.output;
         }
@@ -495,6 +527,43 @@ rule "only" { rewrite { prepend_text("哇！"); } }
         assert!(EngineOpts::from_json("not json").is_err());
         // 空对象 = 全默认
         assert_eq!(EngineOpts::from_json("{}").expect("空对象"), EngineOpts::default());
+    }
+
+    #[test]
+    fn set_fn_host_wires_call_rules() {
+        use crate::fnhost::CustomFnHost;
+        use std::sync::Mutex;
+
+        struct Shout;
+        impl CustomFnHost for Shout {
+            fn call(&self, _name: &str, input: &str, _ctx: &str) -> Result<String, String> {
+                Ok(input.to_uppercase())
+            }
+            fn kind(&self) -> &'static str {
+                "shout"
+            }
+        }
+        // 确认 Mutex 类型可用（Send+Sync 约束的静态检查）
+        let _ = Mutex::new(());
+
+        let mut e = eng();
+        assert_eq!(e.fn_host_kind(), "none", "缺省无宿主");
+        // 缺省无宿主 → call 规则被拒（连同规则回滚）
+        e.load_rules_text(r#"rule "c" { rewrite { call("shout"); } }"#).expect("合法");
+        assert_eq!(e.transform_message("hi", None), "hi ~", "无宿主走兜底（规则被拒）");
+
+        e.set_fn_host(Some(Arc::new(Shout)));
+        assert_eq!(e.fn_host_kind(), "shout");
+        assert_eq!(e.transform_message("hi", None), "HI", "宿主接管 call");
+
+        // 移除宿主回到全拒
+        e.set_fn_host(None);
+        assert_eq!(e.fn_host_kind(), "none");
+        assert_eq!(e.transform_message("hi", None), "hi ~");
+
+        // 内置规则路径不受宿主影响
+        e.load_builtin();
+        assert_eq!(e.transform_message("are you ok?", None), "are you ok? ~");
     }
 
     #[test]

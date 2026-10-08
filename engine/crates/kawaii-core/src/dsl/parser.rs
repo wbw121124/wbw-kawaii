@@ -11,7 +11,7 @@
 //! expr      := expr '||' expr | expr '&&' expr | '!' expr | term
 //! term      := call | compare | ident | 'true' | 'false'
 //! compare   := ident cmp number
-//! call      := ident '(' (string|number|ident)* ')'
+//! call      := ident '(' arg (',' arg)* ')'    // arg = string | number | ident | '{' pairs '}'
 //! ```
 //!
 //! 解析器只做**结构分块**（Call / Compare 节点与块边界）；

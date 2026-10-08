@@ -57,6 +57,18 @@ pub enum Matcher {
     Const(bool),
 }
 
+/// `call(...)` 上下文对象的值（求值期才解析：`persona`/`intensity` 是运行时状态）。
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum CtxVal {
+    Str(String),
+    Num(String),
+    Bool(bool),
+    /// 当前人设风格（如 `soft`）
+    Persona,
+    /// 当前强度（如 `normal`）
+    Intensity,
+}
+
 /// rewrite 操作。
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum RewriteOp {
@@ -65,6 +77,15 @@ pub enum RewriteOp {
     PrependText(String),
     /// 追加当前人设后缀（尊重 custom fallback 覆盖）
     AppendPersona,
+    /// 调用自定义规则函数（Wasmtime 沙箱）：`call("fn", args..., { ctx })`。
+    Call {
+        /// 目标函数名（= 注册名，如 wasm 文件名 stem）
+        name: String,
+        /// 位置字符串参数（透传 `ctx.args`）
+        args: Vec<String>,
+        /// 上下文对象键值（求值期序列化进 `ctx_json`）
+        ctx: Vec<(String, CtxVal)>,
+    },
 }
 
 /// 单条规则。
@@ -371,8 +392,9 @@ fn call_to_rewrite(node: &SyntaxNode<RuleLang>) -> Result<RewriteOp, RuleError> 
             expect_arity(&fname, &args, 0)?;
             Ok(RewriteOp::AppendPersona)
         }
+        "call" => extract_fn_call(node),
         other => Err(RuleError::new(format!(
-            "未知 rewrite 函数 `{}`（可用: replace_text, append_text, prepend_text, append_persona）",
+            "未知 rewrite 函数 `{}`（可用: replace_text, append_text, prepend_text, append_persona, call）",
             other
         ))),
     }
@@ -447,4 +469,185 @@ fn call_parts(node: &SyntaxNode<RuleLang>) -> Result<(String, Args), RuleError> 
     }
     let fname = fname.ok_or_else(|| RuleError::new("Call 节点缺少函数名"))?;
     Ok((fname, Args(vals)))
+}
+
+/// `call("fn", "arg"..., { k: v })` → `RewriteOp::Call`。
+///
+/// 语法：第一个双引号字符串是目标函数名；后续字符串是位置参数；
+/// 唯一允许的末参是 `{ key: value }` 上下文对象（value 可为字符串 / 数字 /
+/// `true` / `false` / `persona` / `intensity`；裸标识符变量留 v2）。
+fn extract_fn_call(node: &SyntaxNode<RuleLang>) -> Result<RewriteOp, RuleError> {
+    let mut call_name_seen = false;
+    let mut in_paren = false;
+    let mut target: Option<String> = None;
+    let mut args: Vec<String> = Vec::new();
+    let mut obj: Option<Vec<(K, String)>> = None; // 上下文对象内部 token
+    let mut obj_depth = 0usize;
+    let mut after_obj = false;
+
+    for el in node.children_with_tokens() {
+        let t = match el {
+            rowan::NodeOrToken::Token(t) => t,
+            rowan::NodeOrToken::Node(_) => continue, // v1 调用参数全是 token（parse_call 不嵌套节点）
+        };
+        if !in_paren {
+            match t.kind() {
+                K::Ident if !call_name_seen => call_name_seen = true, // 函数名 `call`
+                K::LParen => in_paren = true,
+                K::Whitespace | K::Comment => {}
+                other => {
+                    return Err(RuleError::new(format!(
+                        "call 解析出现意外 token `{:?}`",
+                        other
+                    )))
+                }
+            }
+            continue;
+        }
+        // ── 括号内 ──
+        if after_obj {
+            match t.kind() {
+                K::Whitespace | K::Comment | K::Comma => {}
+                K::RParen => in_paren = false,
+                _ => {
+                    return Err(RuleError::new(
+                        "上下文对象 `{ ... }` 只能是 call 的最后一个参数",
+                    ))
+                }
+            }
+            continue;
+        }
+        if obj.is_some() {
+            match t.kind() {
+                K::LBrace => {
+                    return Err(RuleError::new("call 上下文对象不支持嵌套 `{ }`"))
+                }
+                K::RBrace => {
+                    obj_depth -= 1;
+                    if obj_depth == 0 {
+                        after_obj = true;
+                    } else if let Some(buf) = obj.as_mut() {
+                        buf.push((t.kind(), t.text().to_string()));
+                    }
+                }
+                _ => {
+                    if let Some(buf) = obj.as_mut() {
+                        buf.push((t.kind(), t.text().to_string()));
+                    }
+                }
+            }
+            continue;
+        }
+        match t.kind() {
+            K::Whitespace | K::Comment | K::Comma => {}
+            K::Str => {
+                let s = unquote(t.text());
+                if target.is_none() {
+                    target = Some(s);
+                } else {
+                    args.push(s);
+                }
+            }
+            K::LBrace => {
+                obj_depth = 1;
+                obj = Some(Vec::new());
+            }
+            K::RParen => in_paren = false,
+            _ => {
+                return Err(RuleError::new(format!(
+                    "call 的参数必须是双引号字符串或 `{{ key: value }}` 上下文对象，得到 `{}`",
+                    t.text()
+                )))
+            }
+        }
+    }
+
+    let name = target.ok_or_else(|| {
+        RuleError::new("call 缺少目标函数名：call(\"函数名\", ...)")
+    })?;
+    if name.is_empty() {
+        return Err(RuleError::new("call 目标函数名不能为空"));
+    }
+    let ctx = match obj {
+        None => Vec::new(),
+        Some(tokens) => parse_ctx_pairs(&tokens)?,
+    };
+    Ok(RewriteOp::Call { name, args, ctx })
+}
+
+/// 上下文对象内部 token 序列 → `(key, value)` 对（两遍：先显著 token，再成对消费）。
+fn parse_ctx_pairs(tokens: &[(K, String)]) -> Result<Vec<(String, CtxVal)>, RuleError> {
+    let sig: Vec<&(K, String)> = tokens
+        .iter()
+        .filter(|(k, _)| !matches!(k, K::Whitespace | K::Comment))
+        .collect();
+    let mut pairs = Vec::new();
+    let mut i = 0usize;
+    while i < sig.len() {
+        let (kk, kt) = sig[i];
+        if kk != &K::Ident {
+            return Err(RuleError::new(format!(
+                "call 上下文对象的键必须是标识符，得到 `{}`",
+                kt
+            )));
+        }
+        let key = kt.clone();
+        i += 1;
+        if i >= sig.len() {
+            return Err(RuleError::new(format!("上下文键 `{key}` 缺少值")));
+        }
+        let (vk, vt) = sig[i];
+        if vk == &K::Punct && vt == ":" {
+            i += 1;
+        } else {
+            return Err(RuleError::new(format!("上下文键 `{key}` 后缺少 `:`")));
+        }
+        if i >= sig.len() {
+            return Err(RuleError::new(format!("上下文键 `{key}` 缺少值")));
+        }
+        let (vk, vt) = sig[i];
+        let val = match vk {
+            K::Str => CtxVal::Str(unquote(vt)),
+            K::Number => CtxVal::Num(vt.clone()),
+            K::Ident => match vt.as_str() {
+                "true" => CtxVal::Bool(true),
+                "false" => CtxVal::Bool(false),
+                "persona" => CtxVal::Persona,
+                "intensity" => CtxVal::Intensity,
+                other => {
+                    return Err(RuleError::new(format!(
+                        "上下文值 `{other}` 不支持（v1 可用: 字符串 / 数字 / true / false / persona / intensity）"
+                    )))
+                }
+            },
+            _ => {
+                return Err(RuleError::new(format!(
+                    "上下文值必须是字符串 / 数字 / true / false / persona / intensity，得到 `{}`",
+                    vt
+                )))
+            }
+        };
+        pairs.push((key, val));
+        i += 1;
+        if i < sig.len() {
+            let (ck, ct) = sig[i];
+            if ck == &K::Comma {
+                i += 1;
+            } else {
+                return Err(RuleError::new(format!(
+                    "上下文对象键值对之间缺少逗号，得到 `{}`",
+                    ct
+                )));
+            }
+        }
+    }
+    Ok(pairs)
+}
+
+/// 去掉外层双引号（未闭合也容错返回原文）。
+fn unquote(s: &str) -> String {
+    s.strip_prefix('"')
+        .and_then(|x| x.strip_suffix('"'))
+        .unwrap_or(s)
+        .to_string()
 }

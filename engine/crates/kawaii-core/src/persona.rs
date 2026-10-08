@@ -107,6 +107,14 @@ impl KawaiiIntensity {
             _ => Self::Normal,
         }
     }
+
+    pub fn as_str(self) -> &'static str {
+        match self {
+            Self::Subtle => "subtle",
+            Self::Normal => "normal",
+            Self::Bold => "bold",
+        }
+    }
 }
 
 /// 是否跳过装饰（对应 TS `shouldSkipDecorate`）：

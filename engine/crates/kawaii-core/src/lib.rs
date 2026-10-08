@@ -5,6 +5,7 @@
 //! - `persona`：人设 / 强度（与 TS 对齐）；
 //! - `jsonlite`：扁平 opts JSON 解析（零依赖）；
 //! - `fastpath`：内置规则表 TSV（与 TS rules.generated 同源）；
+//! - `fnhost`：自定义规则函数宿主 trait（native=Wasmtime / wasm=空宿主）；
 //! - `patch` / `patch_new`：TS transform/transform-new 忠实移植（P4）；
 //! - `engine`：有状态门面（规则热加载 / 人设轮转 / 统计，napi+wasm 镜像）。
 #![deny(warnings)]
@@ -13,6 +14,7 @@ pub mod cst;
 pub mod dsl;
 pub mod engine;
 pub mod fastpath;
+pub mod fnhost;
 pub mod jsonlite;
 pub mod patch;
 pub mod patch_new;
