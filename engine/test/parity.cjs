@@ -3,6 +3,7 @@
 
 const fs = require('fs');
 const path = require('path');
+const assert = require('node:assert');
 
 const root = path.join(__dirname, '..');
 
@@ -34,6 +35,15 @@ async function main() {
   const eq = (a, b, ctx) => {
     checks++;
     if (a !== b) fail(`${ctx}\n  native: ${JSON.stringify(a)}\n  wasm:   ${JSON.stringify(b)}`);
+  };
+  // 对象/数组：结构化深比较（键序不敏感，与 node:assert deepStrictEqual 一致）
+  const eqj = (a, b, ctx) => {
+    checks++;
+    try {
+      assert.deepStrictEqual(a, b);
+    } catch (e) {
+      fail(`${ctx}\n  native: ${JSON.stringify(a)}\n  wasm:   ${JSON.stringify(b)}\n  ${e.message}`);
+    }
   };
 
   const messages = [
@@ -154,6 +164,70 @@ async function main() {
   for (let i = 0; i < 5; i++) {
     eq(native.cyclePersona(), wasm.cyclePersona(), `cyclePersona #${i}`);
   }
+
+  // ── P4 patch 级 API（native ↔ wasm 结构化深比较）──
+  const tokenSamples = ['a %sq1 b %t, %%x, %[managed]', '类型“{0}”不能赋给类型“{1}”', '没有占位符', ''];
+  for (const s of tokenSamples) {
+    eqj(native.tokenize(s), wasm.tokenize(s), `tokenize(${JSON.stringify(s)})`);
+  }
+
+  const valueSamples = ['Hello world', '%s done', 'already ~', '   ', '超链接颜色不对', '{0} 无效'];
+  for (const v of valueSamples) {
+    for (const opts of optsVariants) {
+      eqj(
+        native.transformValue(v, 0, opts),
+        wasm.transformValue(v, 0, opts),
+        `transformValue(${JSON.stringify(v)}, ${JSON.stringify(opts ?? null)})`,
+      );
+    }
+  }
+
+  const patchInputs = [
+    ['[', '  "Hello world",', '  "%s done",', '  null', ']'].join('\n'),
+    ['{', '  "greeting": "hello",', '  "plug": "超链接颜色不对"', '}'].join('\r\n'),
+    'not json at all',
+    '',
+  ];
+  let lastStats = null;
+  for (const input of patchInputs) {
+    for (const opts of optsVariants) {
+      const n = native.patchContent(input, opts);
+      const w = wasm.patchContent(input, opts);
+      eqj(n, w, `patchContent(${JSON.stringify(input)}, ${JSON.stringify(opts ?? null)})`);
+      lastStats = n;
+    }
+  }
+  eq(native.formatStats(lastStats.stats), wasm.formatStats(lastStats.stats), 'formatStats');
+  eq(native.formatStats({ total: 3, nulls: 1, hits: 2, decorated: 4, identity: 5, kept: 6, already: 7, changed: 8 }), wasm.formatStats({ total: 3, nulls: 1, hits: 2, decorated: 4, identity: 5, kept: 6, already: 7, changed: 8 }), 'formatStats(样例)');
+
+  const tsDiagRules = { 'Hello msg': ['你好呀~', '哈喽喵~'], key2: ['x~'] };
+  const jsonRules = { greeting: ['你好呀~'], plug: ['超链接颜色不对啦~'] };
+  const mdRules = { MD013: ['行太长了啦~'], 'Line too long': ['行太长了喵~'] };
+  const pyRules = { C0114: ['缺少模块文档啦~'], 'missing-module-docstring': ['文档不见咯~'] };
+  const patchOpts = [
+    undefined,
+    { personaStyle: 'soft', intensity: 'normal', customFallback: ' 喵~' },
+    { personaStyle: 'tsundere', intensity: 'subtle' },
+  ];
+
+  const tsDiagInput = ['foo: diag(123, cat, "Hello msg", "Hello world");', 'bar: diag(1, c, "key2", "plain text");', 'baz: noMatch(1);'].join('\n');
+  const jsonInput = ['{', '  "greeting": "hello",', '  "other": "x"', '}'].join('\n');
+  const packInput = JSON.stringify({ contents: { bundle: { greeting: 'hello', other: 'yy' } }, top: 'no' });
+  const tplInput = 'const s = `hi ${name} there`; const t = `${a}b`;';
+  for (const opts of patchOpts) {
+    eqj(native.patchTsDiag(tsDiagInput, tsDiagRules, opts), wasm.patchTsDiag(tsDiagInput, tsDiagRules, opts), `patchTsDiag(... ${JSON.stringify(opts ?? null)})`);
+    eqj(native.patchJsonObject(jsonInput, jsonRules, opts), wasm.patchJsonObject(jsonInput, jsonRules, opts), `patchJsonObject(... ${JSON.stringify(opts ?? null)})`);
+    eqj(native.patchPackBundle(packInput, jsonRules, opts), wasm.patchPackBundle(packInput, jsonRules, opts), `patchPackBundle(... ${JSON.stringify(opts ?? null)})`);
+    eqj(native.patchPackBundle('{ not json', jsonRules, opts), wasm.patchPackBundle('{ not json', jsonRules, opts), 'patchPackBundle(坏 JSON 回落)');
+    eqj(native.patchBundleTemplate(tplInput, null, opts), wasm.patchBundleTemplate(tplInput, null, opts), `patchBundleTemplate(... ${JSON.stringify(opts ?? null)})`);
+    eq(native.transformMarkdownlintWithRules('MD013/line-length: Line too long [999 > 80]', mdRules, opts), wasm.transformMarkdownlintWithRules('MD013/line-length: Line too long [999 > 80]', mdRules, opts), 'transformMarkdownlintWithRules 带前缀');
+    eq(native.transformMarkdownlintWithRules('Line too long', mdRules, opts, 'MD013'), wasm.transformMarkdownlintWithRules('Line too long', mdRules, opts, 'MD013'), 'transformMarkdownlintWithRules code 命中');
+    eq(native.transformPylintWithRules('C0114: Missing module docstring', pyRules, opts), wasm.transformPylintWithRules('C0114: Missing module docstring', pyRules, opts), 'transformPylintWithRules 带前缀');
+    eq(native.transformPylintWithRules('Missing module docstring', pyRules, opts, 'missing-module-docstring'), wasm.transformPylintWithRules('Missing module docstring', pyRules, opts, 'missing-module-docstring'), 'transformPylintWithRules code 命中');
+  }
+  // rules 传 {} / 未命中
+  eqj(native.patchTsDiag('foo: diag(1, c, "k", "Hello world");', {}, undefined), wasm.patchTsDiag('foo: diag(1, c, "k", "Hello world");', {}, undefined), 'patchTsDiag 空表兜底');
+  eq(native.transformMarkdownlintWithRules('MD999: Unknown rule', {}, undefined), wasm.transformMarkdownlintWithRules('MD999: Unknown rule', {}, undefined), 'md 空表兜底');
 
   // 统计（path 各自不同，其余必须一致）
   const sN = native.getStats();

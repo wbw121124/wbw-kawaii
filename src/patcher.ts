@@ -2,8 +2,13 @@ import * as vscode from 'vscode';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as crypto from 'crypto';
-import { patchContent, formatStats, RULES_VERSION, PatchOptions } from './transform';
-import { patchTsDiag, patchJsonObject, patchPackBundle, patchBundleTemplate, transformMarkdownlint, transformPylint } from './transform-new';
+import { RULES_VERSION, PatchOptions } from './transform';
+import {
+  patchContent, formatStats,
+  patchTsDiag, patchJsonObject, patchPackBundle, patchBundleTemplate,
+  transformMarkdownlint, transformPylint,
+  initEngineBridge
+} from './engine-bridge';
 import { interceptDiagnosticCollection } from './intercept';
 import {
   buildTargets, TargetDef, TargetMeta, readTargetMeta, writeTargetMeta,
@@ -59,6 +64,8 @@ export class KawaiiPatcher {
   }
 
   private async doRun(reason: RunReason): Promise<void> {
+    const backend = await initEngineBridge();
+    this.log(`patch 引擎后端: ${backend}`);
     const cfg = vscode.workspace.getConfiguration('wbw-kawaii');
     const enabled = cfg.get<boolean>('enabled', true);
     const auto = reason === 'startup' || reason === 'extensions-changed';
