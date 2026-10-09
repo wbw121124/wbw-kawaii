@@ -1,0 +1,13 @@
+[package]
+name = "kawaii-fn-wasmtime"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "kawaii 自定义规则函数的 Wasmtime 沙箱宿主（native only）"
+
+[dependencies]
+kawaii-core = { path = "../kawaii-core" }
+wasmtime = "49"
+
+[dev-dependencies]
+wat = "1"

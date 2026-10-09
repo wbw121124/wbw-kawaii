@@ -4,6 +4,7 @@ members = [
   "crates/kawaii-core",
   "crates/kawaii-napi",
   "crates/kawaii-wasm",
+  "crates/kawaii-fn-wasmtime",
 ]
 
 [workspace.package]
